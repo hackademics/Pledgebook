@@ -35,5 +35,6 @@
     ".eslintrc.*": ".eslintignore",
     ".prettierrc*": ".prettierignore",
     "nuxt.config.*": ".nuxtrc, .nuxtignore, nuxt.schema.ts"
-  }
+  },
+  "cSpell.words": ["IPFS", "Nuxt", "pledgebook"]
 }

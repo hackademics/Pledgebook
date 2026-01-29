@@ -7,19 +7,16 @@ const currentDir = dirname(fileURLToPath(import.meta.url))
 export default defineNuxtConfig({
   modules: ['@nuxt/ui'],
 
-  css: [join(currentDir, './app/assets/css/main.css')],
+  // Use absolute path for layer CSS - the ~ alias resolves to consuming app's srcDir
+  // which doesn't work for layers. Using join() with currentDir ensures correct resolution.
+  css: [join(currentDir, 'app/assets/css/main.css')],
 
   ui: {
-    colorMode: true,
-    theme: {
-      colors: ['primary', 'secondary', 'success', 'warning', 'error', 'info'],
-    },
+    // Colors are now defined in CSS @theme block, not here
+    // colorMode is handled by @nuxtjs/color-mode in web app
   },
 
   srcDir: 'app',
-  future: {
-    compatibilityVersion: 4,
-  },
 
   vite: {
     css: {
@@ -32,6 +29,12 @@ export default defineNuxtConfig({
     },
     build: {
       sourcemap: false,
+      // Ensure CSS is properly deduplicated and bundled
+      cssCodeSplit: false,
+    },
+    // Deduplicate CSS resolution to prevent duplicate loading
+    resolve: {
+      dedupe: ['tailwindcss', '@nuxt/ui'],
     },
   },
 

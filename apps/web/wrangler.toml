@@ -1,0 +1,201 @@
+# Wrangler configuration for Pledgebook
+# https://developers.cloudflare.com/workers/wrangler/configuration/
+
+name = "pledgebook"
+compatibility_date = "2025-01-29"
+compatibility_flags = ["nodejs_compat_v2"]
+
+# Build output directory (Nuxt generates to .output)
+main = ".output/server/index.mjs"
+assets = { directory = ".output/public", binding = "STATIC_ASSETS" }
+
+# Environment variables (non-sensitive)
+[vars]
+ENVIRONMENT = "development"
+POLYGON_CHAIN_ID = "137"
+POLYGON_RPC_URL = "https://polygon-rpc.com"
+AMOY_CHAIN_ID = "80002"
+AMOY_RPC_URL = "https://rpc-amoy.polygon.technology"
+IPFS_GATEWAY_URL = "https://gateway.pinata.cloud/ipfs/"
+MIN_CONFIDENCE_THRESHOLD = "0.8"
+
+# ---------------------------------------------------------------------------
+# Smart Placement – Run Workers closer to backend services (D1, R2)
+# ---------------------------------------------------------------------------
+[placement]
+mode = "smart"
+
+# ---------------------------------------------------------------------------
+# Observability – Enable Workers Logs and Tracing
+# ---------------------------------------------------------------------------
+[observability]
+enabled = true
+head_sampling_rate = 0.1  # 100% sampling (reduce for high-traffic production)
+
+[observability.logs]
+invocation_logs = true
+
+# ---------------------------------------------------------------------------
+# Limits – Worker resource limits (optional, uses defaults if not specified)
+# ---------------------------------------------------------------------------
+[limits]
+cpu_ms = 30000  # 30 seconds CPU time (Workers Paid max)
+
+# ============================================
+# D1 Database Bindings
+# ============================================
+# Create with: wrangler d1 create pledgebook-db
+[[d1_databases]]
+binding = "DB"
+database_name = "pledgebook-db"
+database_id = "e72025a6-dc78-42c2-96a1-d5434e5d7e7d"
+migrations_dir = "migrations"
+
+# ============================================
+# R2 Storage Bindings
+# ============================================
+# Create with: wrangler r2 bucket create pledgebook-storage
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "pledgebook-storage"
+
+# ============================================
+# Workers KV Bindings
+# ============================================
+# Create with: wrangler kv namespace create pledgebook-cache
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "7b15082e802f48fc805fb4a914c2bac5"
+preview_id = "0232a9772f354296ab1692356719a449"
+
+[[kv_namespaces]]
+binding = "CACHE"
+id = "28449b1f41684cd8b85d1996f388c832"
+preview_id = "c382709106c44fbd997023890a580a2b"
+
+[[kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "ce52705b7a454feab2f87ff8c39dda44"
+preview_id = "63b0ae17f263489f81af33edc30d0382"
+
+[[kv_namespaces]]
+binding = "CONFIG"
+id = "7fe7ebd8f4744b7ebb1976dfde38708c"
+preview_id = "0ba977b412264999901cbc8d0ca3d529"
+
+# ---------------------------------------------------------------------------
+# Queues – Producers (send messages)
+# ---------------------------------------------------------------------------
+[[queues.producers]]
+queue = "pledgebook-blockchain-events"
+binding = "BLOCKCHAIN_EVENTS_QUEUE"
+
+[[queues.producers]]
+queue = "pledgebook-notifications"
+binding = "NOTIFICATIONS_QUEUE"
+
+[[queues.producers]]
+queue = "pledgebook-ai-verification"
+binding = "AI_VERIFICATION_QUEUE"
+
+[[queues.producers]]
+queue = "pledgebook-receipts"
+binding = "RECEIPTS_QUEUE"
+
+[[queues.producers]]
+queue = "pledgebook-audit-events"
+binding = "AUDIT_EVENTS_QUEUE"
+
+# ---------------------------------------------------------------------------
+# Queues – Consumers (process messages)
+# ---------------------------------------------------------------------------
+[[queues.consumers]]
+queue = "pledgebook-blockchain-events"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 5
+dead_letter_queue = "pledgebook-dlq"
+
+[[queues.consumers]]
+queue = "pledgebook-notifications"
+max_batch_size = 25
+max_batch_timeout = 15
+max_retries = 3
+dead_letter_queue = "pledgebook-dlq"
+
+[[queues.consumers]]
+queue = "pledgebook-ai-verification"
+max_batch_size = 5
+max_batch_timeout = 60
+max_retries = 3
+dead_letter_queue = "pledgebook-dlq"
+
+[[queues.consumers]]
+queue = "pledgebook-receipts"
+max_batch_size = 10
+max_batch_timeout = 30
+max_retries = 3
+
+[[queues.consumers]]
+queue = "pledgebook-audit-events"
+max_batch_size = 50
+max_batch_timeout = 10
+max_retries = 2
+
+# ============================================
+# Workers AI Binding
+# ============================================
+[ai]
+binding = "AI"
+remote = true
+
+# ============================================
+# Development Environment Overrides
+# ============================================
+[env.development]
+vars = { ENVIRONMENT = "development" }
+
+# ============================================
+# Preview/Staging Environment
+# ============================================
+[env.staging]
+name = "pledgebook-staging"
+
+[env.staging.vars]
+ENVIRONMENT = "staging"
+POLYGON_CHAIN_ID = "80002"
+POLYGON_RPC_URL = "https://rpc-amoy.polygon.technology"
+
+[[env.staging.d1_databases]]
+binding = "DB"
+database_name = "pledgebook-db-staging"
+database_id = "bf5fc2b3-d70f-43d2-a7e9-9f2e39f596c1"
+
+[[env.staging.r2_buckets]]
+binding = "STORAGE"
+bucket_name = "pledgebook-storage-staging"
+
+# Staging KV namespaces - create with: wrangler kv namespace create <name> --env staging
+[[env.staging.kv_namespaces]]
+binding = "SESSIONS"
+id = "REPLACE_WITH_STAGING_SESSIONS_ID"
+
+[[env.staging.kv_namespaces]]
+binding = "CACHE"
+id = "REPLACE_WITH_STAGING_CACHE_ID"
+
+[[env.staging.kv_namespaces]]
+binding = "RATE_LIMITS"
+id = "REPLACE_WITH_STAGING_RATE_LIMITS_ID"
+
+[[env.staging.kv_namespaces]]
+binding = "CONFIG"
+id = "REPLACE_WITH_STAGING_CONFIG_ID"
+
+# ============================================
+# Production Environment
+# ============================================
+[env.production]
+vars = { ENVIRONMENT = "production" }
+
+

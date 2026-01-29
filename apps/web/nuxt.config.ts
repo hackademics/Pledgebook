@@ -57,8 +57,11 @@ export default defineNuxtConfig({
   // Use the new app directory structure
   srcDir: 'app',
   serverDir: 'server',
-  future: {
-    compatibilityVersion: 4,
+
+  // CSS bundling configuration
+  // Disable inlining of styles to ensure CSS is bundled into external files for better caching
+  features: {
+    inlineStyles: false,
   },
 
   // Compatibility
@@ -66,8 +69,46 @@ export default defineNuxtConfig({
 
   // Build optimizations
   nitro: {
+    // NOTE: Do NOT set preset here - it breaks local development!
+    // Use NITRO_PRESET=cloudflare-pages during build or in package.json scripts
     compressPublicAssets: true,
     minify: true,
+
+    // Enable Cloudflare bindings in local development
+    modules: ['nitro-cloudflare-dev'],
+
+    // Output configuration for Cloudflare Pages
+    output: {
+      dir: '.output',
+      publicDir: '.output/public',
+    },
+
+    // Cloudflare bindings configuration
+    cloudflare: {
+      pages: {
+        // Disable auto-generated asset routes to avoid long paths exceeding 100 char limit
+        // Instead, use simple glob patterns that we specify explicitly
+        defaultRoutes: false,
+        routes: {
+          version: 1,
+          include: ['/*'],
+          exclude: ['/_fonts/*', '/_nuxt/*', '/manifest.json', '/robots.txt'],
+        },
+      },
+      // Enable local development bindings using wrangler.toml
+      wrangler: {
+        configPath: './wrangler.toml',
+        persistDir: '.wrangler/state',
+      },
+    },
+
+    // Disable auto-generated public assets in routes to avoid long paths
+    publicAssets: [
+      {
+        dir: '../public',
+        baseURL: '/',
+      },
+    ],
   },
 
   // Vite configuration

@@ -1,0 +1,5 @@
+{
+  "version": 1,
+  "include": ["/*"],
+  "exclude": ["/_fonts/*", "/_nuxt/*", "/manifest.json", "/robots.txt"]
+}

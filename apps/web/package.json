@@ -4,17 +4,29 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "nuxt build",
+    "build": "nuxt build --preset cloudflare-pages",
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
+    "preview:cf": "pnpm build && wrangler pages dev .output/public",
     "postinstall": "nuxt prepare",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "typecheck": "nuxt typecheck",
     "test:unit": "vitest run",
     "test:unit:watch": "vitest",
-    "clean": "rimraf .nuxt .output dist node_modules/.cache"
+    "clean": "rimraf .nuxt .output dist node_modules/.cache .wrangler",
+    "deploy": "pnpm build && wrangler pages deploy .output/public",
+    "deploy:preview": "pnpm build && wrangler pages deploy .output/public --branch preview",
+    "cf:login": "wrangler login",
+    "cf:whoami": "wrangler whoami",
+    "d1:create": "wrangler d1 create pledgebook-db",
+    "d1:migrate": "wrangler d1 migrations apply pledgebook-db",
+    "d1:migrate:local": "wrangler d1 migrations apply pledgebook-db --local",
+    "d1:studio": "wrangler d1 execute pledgebook-db --local --command \"SELECT 1\"",
+    "r2:create": "wrangler r2 bucket create pledgebook-storage",
+    "kv:create": "wrangler kv namespace create pledgebook-cache",
+    "queue:create": "wrangler queues create pledgebook-queue"
   },
   "dependencies": {
     "@nuxt/fonts": "^0.11.4",
@@ -27,13 +39,14 @@
     "@pledgebook/shared": "workspace:*",
     "@pledgebook/ui": "workspace:*",
     "@vueuse/nuxt": "^13.1.0",
-    "nuxt": "^3.17.7",
+    "nuxt": "^4.3.0",
     "pinia": "^3.0.3",
     "vue": "^3.5.16",
     "vue-router": "^4.5.1",
     "zod": "^3.25.42"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260129.0",
     "@iconify-json/heroicons": "^1.2.3",
     "@nuxt/devtools": "^2.4.1",
     "@nuxt/eslint": "^1.4.2",
@@ -43,9 +56,11 @@
     "@vue/test-utils": "^2.4.6",
     "eslint": "^9.28.0",
     "happy-dom": "^18.0.1",
+    "nitro-cloudflare-dev": "^0.2.2",
     "rimraf": "^6.0.1",
     "typescript": "^5.8.3",
     "vitest": "^3.2.3",
-    "vue-tsc": "^2.2.10"
+    "vue-tsc": "^2.2.10",
+    "wrangler": "^4.61.0"
   }
 }
