@@ -1,0 +1,11 @@
+{
+  "welcome": "Welcome to Pledgebook",
+  "about": "About",
+  "home": "Home",
+  "language": "Language",
+  "theme": {
+    "light": "Light",
+    "dark": "Dark",
+    "system": "System"
+  }
+}

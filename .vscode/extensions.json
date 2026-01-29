@@ -1,0 +1,16 @@
+{
+  "recommendations": [
+    "vue.volar",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "bradlc.vscode-tailwindcss",
+    "antfu.iconify",
+    "antfu.unocss",
+    "lokalise.i18n-ally",
+    "streetsidesoftware.code-spell-checker",
+    "gruntfuggly.todo-tree",
+    "eamodio.gitlens",
+    "usernamehw.errorlens",
+    "nuxtr.nuxtr-vscode"
+  ]
+}

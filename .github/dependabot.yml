@@ -1,0 +1,81 @@
+version: 2
+updates:
+  # Root package.json
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: 'chore(deps)'
+    labels:
+      - 'dependencies'
+      - 'automated'
+    groups:
+      nuxt:
+        patterns:
+          - '@nuxt/*'
+          - 'nuxt'
+        update-types:
+          - 'minor'
+          - 'patch'
+      vue:
+        patterns:
+          - 'vue*'
+          - '@vue/*'
+          - '@vueuse/*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      eslint:
+        patterns:
+          - 'eslint*'
+          - '@eslint/*'
+          - '@typescript-eslint/*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      testing:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
+          - '@vue/test-utils'
+          - 'happy-dom'
+        update-types:
+          - 'minor'
+          - 'patch'
+      typescript:
+        patterns:
+          - 'typescript'
+          - 'vue-tsc'
+          - '@types/*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      build-tools:
+        patterns:
+          - 'turbo'
+          - 'rimraf'
+          - 'prettier'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # GitHub Actions
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+      day: 'monday'
+      time: '09:00'
+      timezone: 'UTC'
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: 'ci(deps)'
+    labels:
+      - 'dependencies'
+      - 'ci'
+      - 'automated'

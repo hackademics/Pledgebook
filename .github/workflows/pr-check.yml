@@ -1,0 +1,55 @@
+name: PR Check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+
+permissions:
+  pull-requests: read
+
+jobs:
+  validate-pr-title:
+    name: Validate PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version-file: '.nvmrc'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Validate PR title follows conventional commits
+        run: echo "${{ github.event.pull_request.title }}" | pnpm exec commitlint
+
+  check-size:
+    name: Check PR Size
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR size
+        run: |
+          ADDITIONS=$(git diff --numstat origin/${{ github.base_ref }}...HEAD | awk '{ add += $1 } END { print add }')
+          DELETIONS=$(git diff --numstat origin/${{ github.base_ref }}...HEAD | awk '{ del += $2 } END { print del }')
+          TOTAL=$((ADDITIONS + DELETIONS))
+
+          echo "📊 PR Statistics:"
+          echo "  Additions: $ADDITIONS"
+          echo "  Deletions: $DELETIONS"
+          echo "  Total changes: $TOTAL"
+
+          if [ "$TOTAL" -gt 1000 ]; then
+            echo "⚠️ Warning: This PR is quite large ($TOTAL lines changed). Consider breaking it into smaller PRs."
+          fi

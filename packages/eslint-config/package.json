@@ -1,0 +1,19 @@
+{
+  "name": "@pledgebook/eslint-config",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./index.mjs",
+  "exports": {
+    ".": "./index.mjs",
+    "./nuxt": "./nuxt.mjs"
+  },
+  "dependencies": {
+    "@nuxt/eslint-config": "^1.2.0",
+    "eslint-config-prettier": "^10.1.1",
+    "eslint-plugin-prettier": "^5.4.0"
+  },
+  "peerDependencies": {
+    "eslint": ">=9.0.0"
+  }
+}

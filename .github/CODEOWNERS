@@ -1,0 +1,35 @@
+# CODEOWNERS file
+
+# These owners will be the default owners for everything in the repo.
+
+# Unless a later match takes precedence, these owners will be requested
+
+# for review when someone opens a pull request.
+
+# Default owners for everything
+
+- @your-github-username
+
+# Apps
+
+/apps/web/ @your-github-username
+
+# Layers
+
+/layers/shared/ @your-github-username
+/layers/ui/ @your-github-username
+
+# Packages
+
+/packages/eslint-config/ @your-github-username
+/packages/tsconfig/ @your-github-username
+
+# Configuration files
+
+/_.json @your-github-username
+/_.yaml @your-github-username
+/\*.cjs @your-github-username
+
+# CI/CD
+
+/.github/ @your-github-username
