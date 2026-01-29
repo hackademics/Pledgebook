@@ -1,7 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  // Enable Nuxt 4 compatibility mode
-
   // Extend shared layer and UI layer
   extends: ['@pledgebook/shared', '@pledgebook/ui'],
 
@@ -19,8 +17,8 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
   ],
 
-  // Development tools
-  devtools: { enabled: true },
+  // Development tools - disabled to test if causing layout shift
+  devtools: { enabled: false },
 
   // App configuration
   app: {
@@ -35,6 +33,9 @@ export default defineNuxtConfig({
       link: [{ rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' }],
     },
   },
+
+  // CSS - defined here only (not in layers) to prevent duplicate loading
+  css: ['~/assets/css/main.css'],
 
   // Color mode configuration
   colorMode: {
@@ -58,10 +59,10 @@ export default defineNuxtConfig({
   srcDir: 'app',
   serverDir: 'server',
 
-  // CSS bundling configuration
-  // Disable inlining of styles to ensure CSS is bundled into external files for better caching
+  // Disable dev server logs streaming to prevent hydration flicker
   features: {
-    inlineStyles: false,
+    devLogs: false,
+    inlineStyles: true,
   },
 
   // Compatibility
@@ -81,6 +82,33 @@ export default defineNuxtConfig({
     output: {
       dir: '.output',
       publicDir: '.output/public',
+    },
+
+    // Route rules for caching static assets
+    routeRules: {
+      // Cache fonts for 1 year (immutable, content-hashed filenames)
+      '/_fonts/**': {
+        headers: {
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
+      },
+      // Cache Nuxt assets for 1 year (immutable, content-hashed filenames)
+      '/_nuxt/**': {
+        headers: {
+          'Cache-Control': 'public, max-age=31536000, immutable',
+        },
+      },
+      // Cache static files for 1 day
+      '/manifest.json': {
+        headers: {
+          'Cache-Control': 'public, max-age=86400',
+        },
+      },
+      '/robots.txt': {
+        headers: {
+          'Cache-Control': 'public, max-age=86400',
+        },
+      },
     },
 
     // Cloudflare bindings configuration
@@ -132,6 +160,41 @@ export default defineNuxtConfig({
   eslint: {
     config: {
       standalone: false,
+    },
+  },
+
+  // Fonts optimization - with fallback metrics to prevent layout shift (CLS)
+  fonts: {
+    defaults: {
+      weights: [400, 600],
+      styles: ['normal'],
+      subsets: ['latin'],
+      preload: false,
+      // Define fallback fonts - @nuxt/fonts will auto-adjust their metrics
+      // to match the primary font, preventing layout shift when fonts load
+      fallbacks: {
+        'sans-serif': ['Arial', 'Helvetica Neue', 'sans-serif'],
+        monospace: ['Courier New', 'monospace'],
+      },
+    },
+    // Define font families with preload for critical fonts
+    families: [
+      {
+        name: 'Inter',
+        weights: [400, 600],
+        preload: true,
+        // Fallbacks will have metrics adjusted to match Inter
+        fallbacks: ['Arial', 'Helvetica Neue', 'sans-serif'],
+      },
+      {
+        name: 'JetBrains Mono',
+        weights: [400],
+        preload: false,
+        fallbacks: ['Courier New', 'monospace'],
+      },
+    ],
+    experimental: {
+      processCSSVariables: true,
     },
   },
 

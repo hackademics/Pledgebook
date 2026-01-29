@@ -1,15 +1,8 @@
-import { fileURLToPath } from 'node:url'
-import { dirname, join } from 'node:path'
-
-const currentDir = dirname(fileURLToPath(import.meta.url))
-
 // UI Layer configuration with Nuxt UI
+// NOTE: CSS is intentionally NOT defined here to prevent duplicate loading
+// CSS should be defined only in the consuming app (apps/web)
 export default defineNuxtConfig({
   modules: ['@nuxt/ui'],
-
-  // Use absolute path for layer CSS - the ~ alias resolves to consuming app's srcDir
-  // which doesn't work for layers. Using join() with currentDir ensures correct resolution.
-  css: [join(currentDir, 'app/assets/css/main.css')],
 
   ui: {
     // Colors are now defined in CSS @theme block, not here
@@ -29,8 +22,22 @@ export default defineNuxtConfig({
     },
     build: {
       sourcemap: false,
-      // Ensure CSS is properly deduplicated and bundled
-      cssCodeSplit: false,
+      // Enable CSS code splitting for better performance
+      cssCodeSplit: true,
+      // Optimize CSS minification
+      cssMinify: 'lightningcss',
+      // Reduce CSS chunk size
+      rollupOptions: {
+        output: {
+          // Separate CSS into smaller chunks
+          assetFileNames: (assetInfo) => {
+            if (assetInfo.name?.endsWith('.css')) {
+              return '_nuxt/css/[name]-[hash][extname]'
+            }
+            return '_nuxt/[name]-[hash][extname]'
+          },
+        },
+      },
     },
     // Deduplicate CSS resolution to prevent duplicate loading
     resolve: {

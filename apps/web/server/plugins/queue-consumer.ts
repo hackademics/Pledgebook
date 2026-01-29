@@ -18,8 +18,9 @@ export default defineNitroPlugin((nitroApp) => {
   }
 
   // Register queue consumer hook
+  // @ts-expect-error Cloudflare queue hook is not typed in Nitro yet
   nitroApp.hooks.hook(
-    'cloudflare:queue' as any,
+    'cloudflare:queue',
     async ({ batch }: { batch: MessageBatch<QueueMessage> }) => {
       console.log(`Processing ${batch.messages.length} messages from queue: ${batch.queue}`)
 

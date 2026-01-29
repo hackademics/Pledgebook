@@ -55,11 +55,11 @@
       </div>
     </div>
 
-    <div class="mt-12 text-sm text-gray-500">
+    <div class="mt-12 text-sm text-gray-600 dark:text-gray-300">
       <p>
         Counter: {{ count }}
         <button
-          class="ml-2 rounded bg-gray-200 px-2 py-1 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600"
+          class="ml-2 rounded bg-gray-200 px-2 py-1 text-gray-900 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-100 dark:hover:bg-gray-600"
           @click="increment"
         >
           +1

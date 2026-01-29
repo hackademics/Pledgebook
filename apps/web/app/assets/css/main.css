@@ -1,6 +1,5 @@
 @import 'tailwindcss';
-/* Note: @nuxt/ui CSS is automatically injected by the module
-   Do NOT add @import '@nuxt/ui' here - it causes double loading */
+@import '@nuxt/ui';
 
 /*
   Custom theme configuration
