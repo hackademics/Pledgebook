@@ -11,14 +11,25 @@ export interface CloudflareBindings {
   /** D1 Database binding */
   DB: D1Database
 
-  /** R2 Storage bucket binding */
-  R2: R2Bucket
+  /** R2 Storage bucket binding (named STORAGE in wrangler.toml) */
+  STORAGE: R2Bucket
 
   /** Workers KV namespace binding */
   KV: KVNamespace
 
-  /** Queue producer binding */
-  QUEUE: Queue<QueueMessage>
+  /** Cache KV namespace binding */
+  CACHE?: KVNamespace
+
+  /** Rate limits KV namespace binding */
+  RATE_LIMITS?: KVNamespace
+
+  /** Queue producer bindings */
+  QUEUE?: Queue<QueueMessage>
+  BLOCKCHAIN_EVENTS_QUEUE?: Queue<QueueMessage>
+  NOTIFICATIONS_QUEUE?: Queue<QueueMessage>
+  AI_VERIFICATION_QUEUE?: Queue<QueueMessage>
+  RECEIPTS_QUEUE?: Queue<QueueMessage>
+  AUDIT_EVENTS_QUEUE?: Queue<QueueMessage>
 
   /** Workers AI binding */
   AI: Ai
@@ -28,6 +39,9 @@ export interface CloudflareBindings {
 
   /** Environment variables */
   ENVIRONMENT: string
+  IPFS_GATEWAY_URL?: string
+  IPFS_PINATA_JWT?: string
+  NUXT_IPFS_PINATA_SECRET_JWT?: string
 }
 
 /**
@@ -48,6 +62,9 @@ declare module 'h3' {
     cloudflare?: {
       env: CloudflareBindings
       context: ExecutionContext
+    }
+    auth?: {
+      address: string
     }
   }
 }

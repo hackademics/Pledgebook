@@ -6,8 +6,7 @@ compatibility_date = "2025-01-29"
 compatibility_flags = ["nodejs_compat_v2"]
 
 # Build output directory (Nuxt generates to .output)
-main = ".output/server/index.mjs"
-assets = { directory = ".output/public", binding = "STATIC_ASSETS" }
+pages_build_output_dir = ".output/public"
 
 # Environment variables (non-sensitive)
 [vars]
@@ -18,6 +17,8 @@ AMOY_CHAIN_ID = "80002"
 AMOY_RPC_URL = "https://rpc-amoy.polygon.technology"
 IPFS_GATEWAY_URL = "https://gateway.pinata.cloud/ipfs/"
 MIN_CONFIDENCE_THRESHOLD = "0.8"
+NUXT_PUBLIC_ADMIN_WALLET_ALLOWLIST = "0x9bedbe969028d7fabc6c9ccb8c9f05ec1b70d35f"
+NUXT_ADMIN_WALLET_ALLOWLIST = "0x9bedbe969028d7fabc6c9ccb8c9f05ec1b70d35f"
 
 # ---------------------------------------------------------------------------
 # Smart Placement – Run Workers closer to backend services (D1, R2)

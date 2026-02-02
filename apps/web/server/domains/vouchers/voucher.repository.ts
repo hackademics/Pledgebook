@@ -19,11 +19,11 @@ export interface VoucherRepository {
   findAll(query: ListVouchersQuery): Promise<{ data: Voucher[]; total: number }>
   findByCampaign(
     campaignId: string,
-    query: ListVouchersQuery
+    query: ListVouchersQuery,
   ): Promise<{ data: Voucher[]; total: number }>
   findByVoucher(
     voucherAddress: string,
-    query: ListVouchersQuery
+    query: ListVouchersQuery,
   ): Promise<{ data: Voucher[]; total: number }>
   findActiveByCampaign(campaignId: string): Promise<Voucher[]>
   create(voucherAddress: string, input: CreateVoucherInput): Promise<Voucher>
@@ -116,7 +116,7 @@ export function createVoucherRepository(db: D1Database): VoucherRepository {
           ${whereClause} 
           ORDER BY ${safeSort} ${safeOrder} 
           LIMIT ? OFFSET ?
-        `
+        `,
         )
         .bind(...params, limit, offset)
         .all<Voucher>()
@@ -132,7 +132,7 @@ export function createVoucherRepository(db: D1Database): VoucherRepository {
      */
     async findByCampaign(
       campaignId: string,
-      query: ListVouchersQuery
+      query: ListVouchersQuery,
     ): Promise<{ data: Voucher[]; total: number }> {
       return this.findAll({ ...query, campaignId })
     },
@@ -142,7 +142,7 @@ export function createVoucherRepository(db: D1Database): VoucherRepository {
      */
     async findByVoucher(
       voucherAddress: string,
-      query: ListVouchersQuery
+      query: ListVouchersQuery,
     ): Promise<{ data: Voucher[]; total: number }> {
       return this.findAll({ ...query, voucherAddress })
     },
@@ -157,7 +157,7 @@ export function createVoucherRepository(db: D1Database): VoucherRepository {
           SELECT * FROM vouchers 
           WHERE campaign_id = ? AND status = 'active'
           ORDER BY amount DESC
-        `
+        `,
         )
         .bind(campaignId)
         .all<Voucher>()
@@ -184,7 +184,7 @@ export function createVoucherRepository(db: D1Database): VoucherRepository {
           ) VALUES (?, ?, ?, ?, 'pending', ?, ?, NULL, NULL, ?, ?, '0', '0',
             NULL, '0', NULL, NULL, ?, ?, ?, ?, NULL, NULL)
           RETURNING *
-        `
+        `,
         )
         .bind(
           voucherId,
@@ -198,7 +198,7 @@ export function createVoucherRepository(db: D1Database): VoucherRepository {
           input.expiresAt ?? null,
           now,
           now,
-          now
+          now,
         )
         .first<Voucher>()
 
@@ -363,7 +363,7 @@ export function createVoucherRepository(db: D1Database): VoucherRepository {
           SELECT COALESCE(SUM(CAST(amount AS INTEGER)), 0) as total 
           FROM vouchers 
           WHERE campaign_id = ? AND status = 'active'
-        `
+        `,
         )
         .bind(campaignId)
         .first<{ total: number }>()

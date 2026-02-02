@@ -1,7 +1,8 @@
 import type { H3Event } from 'h3'
 import { getQuery, getRouterParam, readBody, setResponseStatus } from 'h3'
 import type { ZodType, ZodTypeDef } from 'zod'
-import { handleError, fromZodError } from './errors'
+import type { handleError } from './errors'
+import { fromZodError, createApiError, ApiErrorCode } from './errors'
 
 // =============================================================================
 // API RESPONSE UTILITIES
@@ -64,7 +65,7 @@ export function errorResponse(error: ReturnType<typeof handleError>): ApiRespons
  */
 export async function parseBody<Output, Def extends ZodTypeDef, Input>(
   event: H3Event,
-  schema: ZodType<Output, Def, Input>
+  schema: ZodType<Output, Def, Input>,
 ): Promise<Output> {
   const body = await readBody(event)
   const result = schema.safeParse(body)
@@ -82,7 +83,7 @@ export async function parseBody<Output, Def extends ZodTypeDef, Input>(
  */
 export function parseQuery<Output, Def extends ZodTypeDef, Input>(
   event: H3Event,
-  schema: ZodType<Output, Def, Input>
+  schema: ZodType<Output, Def, Input>,
 ): Output {
   const query = getQuery(event)
   const result = schema.safeParse(query)
@@ -101,7 +102,7 @@ export function getRequiredParam(event: H3Event, name: string): string {
   const param = getRouterParam(event, name)
 
   if (!param) {
-    throw handleError(new Error(`Missing required parameter: ${name}`))
+    throw createApiError(ApiErrorCode.BAD_REQUEST, `Missing required parameter: ${name}`)
   }
 
   return param
@@ -114,7 +115,7 @@ export function sendSuccess<T>(
   event: H3Event,
   data: T,
   meta?: ApiResponse['meta'],
-  statusCode: number = 200
+  statusCode: number = 200,
 ): ApiResponse<T> {
   setResponseStatus(event, statusCode)
   return successResponse(data, meta)

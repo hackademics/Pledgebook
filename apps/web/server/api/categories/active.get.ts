@@ -1,5 +1,5 @@
 import { defineEventHandler } from 'h3'
-import { useCloudflare } from '../../utils/cloudflare'
+import { useCloudflareOptional } from '../../utils/cloudflare'
 import { handleError } from '../../utils/errors'
 import { sendSuccess } from '../../utils/response'
 import { createCategoryRepository, createCategoryService } from '../../domains/categories'
@@ -15,7 +15,19 @@ import { createCategoryRepository, createCategoryService } from '../../domains/c
  */
 export default defineEventHandler(async (event) => {
   try {
-    const { DB } = useCloudflare(event)
+    const cloudflare = useCloudflareOptional(event)
+    if (!cloudflare) {
+      return sendSuccess(event, [], {
+        reason: 'cloudflare-bindings-missing',
+      })
+    }
+
+    const { DB } = cloudflare
+    if (!DB) {
+      return sendSuccess(event, [], {
+        reason: 'cloudflare-db-missing',
+      })
+    }
 
     // Initialize repository and service
     const repository = createCategoryRepository(DB)

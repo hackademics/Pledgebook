@@ -1,0 +1,29 @@
+{
+  "http": {
+    "authorizedKeys": [
+      {
+        "type": "KEY_TYPE_ECDSA_EVM",
+        "publicKey": "0x0000000000000000000000000000000000000000"
+      }
+    ]
+  },
+  "templates": {
+    "validation": "Validate campaign evidence for: {{prompt}}. Evidence: {{evidence}}",
+    "baseline": "Create baseline summary for: {{prompt}}. Evidence: {{evidence}}",
+    "evaluation": "Evaluate campaign against baseline {{baseline}}. Prompt: {{prompt}}. Evidence: {{evidence}}"
+  },
+  "endpoints": {
+    "modelEndpoint": "",
+    "hashStorageUrl": "",
+    "validationCallbackUrl": "",
+    "baselineCallbackUrl": "",
+    "evaluationCallbackUrl": ""
+  },
+  "consensus": {
+    "passThreshold": 0.66,
+    "failThreshold": 0.33
+  },
+  "deco": {
+    "enabled": false
+  }
+}

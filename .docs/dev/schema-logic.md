@@ -95,7 +95,7 @@ export const CampaignSchema = z.object({
       action: z.string(),
       actor: z.string(),
       details: z.string().optional(),
-    })
+    }),
   ),
   consensusResults: z.array(
     z.object({
@@ -104,7 +104,7 @@ export const CampaignSchema = z.object({
       reasoning: z.string(),
       sources: z.array(z.string()),
       timestamp: z.date(),
-    })
+    }),
   ),
   isDisputed: z.boolean().default(false),
   escrowAddress: z.string().optional(),

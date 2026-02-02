@@ -84,3 +84,124 @@ The workflow is linear but with branches for disputes. Each step updates campaig
 - **Wallet/Auth**: SIWE middleware guards actions; RBAC checks in contracts (e.g., creatorOnly).
 
 This cohesive workflow ensures funds are secure, traceable, and automatically managed, minimizing fraud through incentives and verifiability. For CRE consensus workflows in the next step, we'll define the detailed AI prompt execution and aggregation logic.
+
+# PledgeBook Product Development Document (Continued)
+
+## Phase 10: Solidity Contracts and Financial Management Workflow
+
+**Objective**: Coalesce all knowledge on PledgeBook's actors, processes, and financial mechanics into a unified smart contract framework on Polygon. This phase defines how contracts manage donations (pledges), escrow, yield generation (via integrated lending like Aave), fund distributions, forfeits, rewards, and refunds. The workflow tracks each actor's wallet, actions, and interactions in a trustless, auditable manner, ensuring "truth > trust" through immutable state transitions, events for off-chain indexing, and CRE callbacks for verification. Contracts are designed for security (OpenZeppelin), efficiency (gas-optimized loops), and scalability (factory pattern for per-campaign escrows).
+
+**Deliverables**:
+
+- Actor definitions and roles.
+- Detailed financial workflow steps with funds tracking.
+- Solidity contract structures and code snippets.
+- Integration points with CRE and web layer.
+
+**Standards, Patterns, Conventions, and Best Practices** (Carmack-Inspired):
+
+- **Actor-Centric Design**: Mappings keyed by wallet address for pledges/vouchers/disputers; events for every action (e.g., Pledged, Vouched, Disputed). Carmack: "Track state explicitly; make audits simple with clear logs."
+- **Funds Flow**: All USDC via SafeERC20; escrow per campaign; yields auto-deposited/withdrawn. No direct admin access to funds (multisig treasury).
+- **State Transitions**: Finite state machine for campaigns (Draft → Active → Resolved); revert on invalid states.
+- **Yield Generation**: Integrate Aave for passive interest on escrow (principal untouched); pro-rata distribution.
+- **Forfeits/Rewards**: Automated on resolution; forfeits to winners/treasury (1% fee).
+- **Security**: ReentrancyGuard, Pausable, Ownable2Step; cap loops (e.g., batch refunds); Slither-audited.
+- **Efficiency**: Use arrays for iteration only when needed; mappings for O(1) lookups.
+- **Testing Gate**: Hardhat 100% coverage; fork Polygon mainnet for yield simulations. Junior task: Test pledge → vouch → resolve success path.
+
+### 10.1: Key Actors and Their Wallets/Interactions
+
+- **Creator**: Wallet address creates campaign, posts bond, receives releases. Actions: Submit goal/prompt, update draft. Tracked: creatorAddress in Campaign; bond in escrow.
+- **Donor (Pledger)**: Wallet pledges USDC to escrow. Actions: Approve/transfer, optional message. Tracked: pledges mapping (address → amount); pledgers array for refunds.
+- **Voucher (Endorser)**: Wallet stakes to endorse legitimacy. Actions: Vouch with amount. Tracked: vouchers mapping; voucherList for rewards.
+- **Disputer**: Wallet stakes to challenge fraud. Actions: Dispute with amount/reason. Tracked: disputers mapping; disputerList for forfeits.
+- **System/Admin (Multisig)**: Wallet (or CRE-authorized) approves campaigns, resolves edge disputes. Tracked: Ownable contract owner.
+- **Escrow Wallet (Contract)**: Per-campaign contract address holds funds (pledges + bonds + stakes); integrates Aave for yields. Tracked: balanceOf(this) for total; aToken balance for yields.
+
+All actors interact via wallet signatures; no email/password. Funds tracked in real-time via events (indexed for The Graph querying in web UI).
+
+### 10.2: Detailed Financial Workflow with Funds Tracking
+
+The workflow is event-driven, with CRE callbacks for verification. Funds (USDC) are tracked at every step: deposited to escrow, yielded via Aave, distributed/forfeited on resolution. All transfers emit events for web syncing (e.g., pledge total updates).
+
+1. **Campaign Creation (Creator Action)**:
+   - Creator submits via web (wallet sign); posts bond (e.g., 1% goal).
+   - Contract: Factory deploys EscrowContract; transfers bond to escrow.
+   - Funds Track: Bond locked (creatorBond += amount); yield deposit starts (Aave supply).
+   - Event: CampaignCreated(id, creator, bondAmount).
+
+2. **Campaign Approval (Admin/CRE)**:
+   - CRE validates prompt/sources; admin multisig approves if needed.
+   - Contract: Status → Active; escrow activated.
+   - Funds Track: No change; yields accrue from bond.
+   - Event: CampaignApproved(id).
+
+3. **Pledging (Donor Action)**:
+   - Donor approves USDC, pledges amount via web.
+   - Contract: TransferFrom to escrow; update pledges mapping/amountPledged; add to pledgers list. Deposit to Aave for yield.
+   - Funds Track: amountPledged += amount; totalEscrow = balance + aTokenYield.
+   - Event: Pledged(id, pledger, amount).
+
+4. **Vouching (Voucher Action)**:
+   - Voucher stakes via web.
+   - Contract: TransferFrom to escrow; update vouchers mapping/totalVouched; add to voucherList; deposit to Aave.
+   - Funds Track: totalVouched += amount; yields shared pool.
+   - Event: Vouched(id, voucher, amount).
+
+5. **Disputing (Disputer Action)**:
+   - Disputer stakes + reason via web (during window).
+   - Contract: TransferFrom to escrow (separate non-yielding pool); update disputers mapping/totalDisputed; flag isDisputed if threshold. Triggers CRE re-verification.
+   - Funds Track: totalDisputed += amount (held separately to avoid yield incentives for false disputes).
+   - Event: Disputed(id, disputer, amount, reason).
+
+6. **Yield Generation (Passive During Active Phase)**:
+   - Contract: On deposit (pledge/vouch), call Aave supply(); track aToken balance.
+   - Funds Track: yieldAccrued = aToken.balanceOf(this) - principalTotal. Periodic claimInterest() if needed (CRE cron).
+   - No event (queryable via aToken).
+
+7. **Verification/Resolution (CRE Callback)**:
+   - CRE consensus at endDate: TRUE → success; FALSE → failure.
+   - Contract: verifyAndRelease(success):
+     - Success: Withdraw from Aave (principal + yield); release to creator (pledged + bond + yieldShare); vouchers get stake + pro-rata yield.
+     - Failure/Fraud: Refunds to pledgers (principal + yieldShare); forfeit creator/voucher bonds to disputers/treasury; return disputer stakes.
+     - Dispute upheld: Extra forfeits to disputers.
+   - Funds Track: All movements via SafeERC20; treasuryFee = 1% on releases/forfeits.
+   - Events: Verified(id, success), FundsReleased(id, amount, to), Refunded(id, pledger, amount), Forfeited(id, from, amount).
+
+8. **Post-Resolution Audit**:
+   - Web queries events/logs; contract views for balances/history.
+   - Funds Track: All zeroed on resolution; treasury accumulates fees.
+
+### 10.3: Solidity Contract Structures
+
+Extend previous with full mechanics.
+
+```solidity
+contract CampaignFactory {
+  function createCampaign(...) external returns (address escrow) {
+    escrow = new PledgeEscrow(usdc, msg.sender, ...);
+    // Track in mapping
+  }
+}
+
+contract PledgeEscrow {
+  // Structs as in previous
+  uint256 constant MIN_BOND = 10e6; // $10 USDC
+  uint256 constant DISPUTE_THRESHOLD = 10; // 10% of pledged
+  uint256 constant TREASURY_FEE = 100; // 1% (basis points)
+  IPool public aavePool;
+
+  // Functions as in proposals: pledge, vouch, dispute, verifyAndRelease with yield logic
+  function claimYield() internal {
+    uint256 yield = IERC20(aavePool.getReserveData(address(usdc)).aTokenAddress).balanceOf(address(this)) - totalPrincipal;
+    // Distribute pro-rata
+  }
+}
+```
+
+### 10.4: Integration with CRE and Web Layer
+
+- CRE: Triggers on events (e.g., DisputeTriggered → re-verify); callbacks to verifyAndRelease.
+- Web: Wagmi for tx (e.g., pledge call); polling for updates (useInterval on amountPledged); toast on events.
+
+This workflow ensures secure, incentive-aligned financial management.

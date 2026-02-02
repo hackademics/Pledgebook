@@ -1,6 +1,8 @@
 import { defineEventHandler } from 'h3'
 import { useCloudflare } from '../../utils/cloudflare'
 import { handleError } from '../../utils/errors'
+import { requireWalletAddress } from '../../utils/auth'
+import { requireTurnstile } from '../../utils/turnstile'
 import { sendCreated, parseBody } from '../../utils/response'
 import {
   createPledgeRepository,
@@ -22,11 +24,10 @@ export default defineEventHandler(async (event) => {
   try {
     const { DB } = useCloudflare(event)
 
+    await requireTurnstile(event)
+
     // Get pledger address from header
-    const pledgerAddress = event.node.req.headers['x-wallet-address'] as string
-    if (!pledgerAddress) {
-      throw new Error('Missing X-Wallet-Address header')
-    }
+    const pledgerAddress = requireWalletAddress(event)
 
     // Parse and validate request body
     const input = await parseBody(event, createPledgeSchema)

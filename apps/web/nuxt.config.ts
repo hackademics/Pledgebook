@@ -1,8 +1,24 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
-export default defineNuxtConfig({
-  // Extend shared layer and UI layer
-  extends: ['@pledgebook/shared', '@pledgebook/ui'],
+type RollupWarning = {
+  code?: string
+  message?: string
+}
 
+const ignoreRollupWarnings = (warning: RollupWarning, warn: (warning: RollupWarning) => void) => {
+  if (
+    warning.code === 'COMMENT_ANNOTATION' ||
+    warning.code === 'THIS_IS_UNDEFINED' ||
+    warning.code === 'CIRCULAR_DEPENDENCY' ||
+    warning.message?.includes('contains an annotation that Rollup cannot interpret') ||
+    warning.message?.startsWith('Circular dependency:')
+  ) {
+    return
+  }
+
+  warn(warning)
+}
+
+export default defineNuxtConfig({
   // Modules
   modules: [
     '@nuxt/devtools',
@@ -11,6 +27,7 @@ export default defineNuxtConfig({
     '@nuxt/icon',
     '@nuxt/image',
     '@nuxt/scripts',
+    '@nuxt/ui',
     '@nuxtjs/color-mode',
     '@nuxtjs/i18n',
     '@pinia/nuxt',
@@ -35,7 +52,7 @@ export default defineNuxtConfig({
   },
 
   // CSS - defined here only (not in layers) to prevent duplicate loading
-  css: ['~/assets/css/main.css'],
+  css: ['~/assets/css/main.css', '~/assets/css/campaign-form.css'],
 
   // Color mode configuration
   colorMode: {
@@ -48,10 +65,26 @@ export default defineNuxtConfig({
   runtimeConfig: {
     // Server-side only
     apiSecret: '',
+    appUrl: process.env.NUXT_APP_URL || '',
+    turnstileSecret: process.env.NUXT_TURNSTILE_SECRET || '',
+    turnstileSecretLocal: process.env.NUXT_TURNSTILE_SECRET_LOCAL || '',
+    adminWalletAllowlist: process.env.NUXT_ADMIN_WALLET_ALLOWLIST || '',
+    creWebhookSecret: process.env.NUXT_CRE_WEBHOOK_SECRET || '',
+    ipfsPinataJwt:
+      process.env.NUXT_IPFS_PINATA_SECRET_JWT || process.env.NUXT_IPFS_PINATA_JWT || '',
+    // AI Provider API Keys
+    anthropicApiKey: process.env.NUXT_ANTHROPIC_API_KEY || '',
+    openaiApiKey: process.env.NUXT_OPENAI_API_KEY || '',
+    googleAiApiKey: process.env.NUXT_GOOGLE_AI_API_KEY || '',
     // Public (exposed to client)
     public: {
-      apiBase: '',
+      apiBase: process.env.NUXT_PUBLIC_API_BASE || '/api',
       appName: 'Pledgebook',
+      appUrl: process.env.NUXT_PUBLIC_APP_URL || '',
+      ipfsGatewayUrl: process.env.NUXT_PUBLIC_IPFS_GATEWAY_URL || '',
+      turnstileSiteKey: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY || '',
+      turnstileSiteKeyLocal: process.env.NUXT_PUBLIC_TURNSTILE_SITE_KEY_LOCAL || '',
+      adminWalletAllowlist: process.env.NUXT_PUBLIC_ADMIN_WALLET_ALLOWLIST || '',
     },
   },
 
@@ -86,6 +119,12 @@ export default defineNuxtConfig({
 
     // Route rules for caching static assets
     routeRules: {
+      // Never cache API responses
+      '/api/**': {
+        headers: {
+          'Cache-Control': 'no-store, max-age=0',
+        },
+      },
       // Cache fonts for 1 year (immutable, content-hashed filenames)
       '/_fonts/**': {
         headers: {
@@ -137,6 +176,10 @@ export default defineNuxtConfig({
         baseURL: '/',
       },
     ],
+
+    rollupConfig: {
+      onwarn: ignoreRollupWarnings,
+    },
   },
 
   // Vite configuration
@@ -145,6 +188,12 @@ export default defineNuxtConfig({
       script: {
         defineModel: true,
         propsDestructure: true,
+      },
+    },
+    build: {
+      sourcemap: false,
+      rollupOptions: {
+        onwarn: ignoreRollupWarnings,
       },
     },
   },

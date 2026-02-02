@@ -11,10 +11,10 @@ import { useCloudflare } from '../../utils/cloudflare'
 
 /**
  * Example R2 Storage API Route
- * Demonstrates file upload/download with R2
+ * Demonstrates file upload/download with R2 (STORAGE binding)
  */
 export default defineEventHandler(async (event) => {
-  const { R2 } = useCloudflare(event)
+  const { STORAGE } = useCloudflare(event)
 
   const method = getMethod(event)
   const query = getQuery(event)
@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
   if (method === 'GET') {
     if (!key) {
       // List objects in bucket
-      const objects = await R2.list({ limit: 100 })
+      const objects = await STORAGE.list({ limit: 100 })
       return {
         success: true,
         objects: objects.objects.map((obj) => ({
@@ -37,7 +37,7 @@ export default defineEventHandler(async (event) => {
     }
 
     // Get specific object
-    const object = await R2.get(key)
+    const object = await STORAGE.get(key)
 
     if (!object) {
       throw createError({
@@ -73,7 +73,7 @@ export default defineEventHandler(async (event) => {
 
     const contentType = getHeader(event, 'content-type') || 'application/octet-stream'
 
-    await R2.put(key, body, {
+    await STORAGE.put(key, body, {
       httpMetadata: {
         contentType,
       },
@@ -97,7 +97,7 @@ export default defineEventHandler(async (event) => {
       })
     }
 
-    await R2.delete(key)
+    await STORAGE.delete(key)
 
     return {
       success: true,

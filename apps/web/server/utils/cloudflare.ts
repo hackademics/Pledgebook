@@ -7,7 +7,7 @@ import type { CloudflareBindings } from '../types/cloudflare'
  * @example
  * ```ts
  * export default defineEventHandler(async (event) => {
- *   const { DB, KV, R2, QUEUE, AI } = useCloudflare(event)
+ *   const { DB, KV, STORAGE, QUEUE, AI } = useCloudflare(event)
  *
  *   // Use D1 database
  *   const users = await DB.prepare('SELECT * FROM users').all()
@@ -15,8 +15,8 @@ import type { CloudflareBindings } from '../types/cloudflare'
  *   // Use KV store
  *   await KV.put('key', 'value')
  *
- *   // Use R2 storage
- *   await R2.put('file.txt', 'content')
+ *   // Use R2 storage (STORAGE binding)
+ *   await STORAGE.put('file.txt', 'content')
  *
  *   // Send to queue
  *   await QUEUE.send({ type: 'email', payload: {}, timestamp: Date.now() })
@@ -31,7 +31,7 @@ export function useCloudflare(event: H3Event): CloudflareBindings {
 
   if (!cloudflare) {
     throw new Error(
-      'Cloudflare bindings not available. Ensure you are running with wrangler or deployed to Cloudflare.'
+      'Cloudflare bindings not available. Ensure you are running with wrangler or deployed to Cloudflare.',
     )
   }
 
@@ -47,7 +47,7 @@ export function useExecutionContext(event: H3Event): ExecutionContext {
 
   if (!cloudflare) {
     throw new Error(
-      'Cloudflare context not available. Ensure you are running with wrangler or deployed to Cloudflare.'
+      'Cloudflare context not available. Ensure you are running with wrangler or deployed to Cloudflare.',
     )
   }
 

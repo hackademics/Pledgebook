@@ -39,6 +39,40 @@ const errorStatusMap: Record<ApiErrorCode, number> = {
   [ApiErrorCode.SERVICE_UNAVAILABLE]: 503,
 }
 
+const statusCodeMap: Record<number, ApiErrorCode> = {
+  400: ApiErrorCode.BAD_REQUEST,
+  401: ApiErrorCode.UNAUTHORIZED,
+  403: ApiErrorCode.FORBIDDEN,
+  404: ApiErrorCode.NOT_FOUND,
+  409: ApiErrorCode.CONFLICT,
+  413: ApiErrorCode.BAD_REQUEST,
+  422: ApiErrorCode.VALIDATION_ERROR,
+  429: ApiErrorCode.RATE_LIMITED,
+  500: ApiErrorCode.INTERNAL_ERROR,
+  502: ApiErrorCode.SERVICE_UNAVAILABLE,
+  503: ApiErrorCode.SERVICE_UNAVAILABLE,
+  504: ApiErrorCode.SERVICE_UNAVAILABLE,
+}
+
+function resolveErrorCode(statusCode?: number, statusMessage?: string): ApiErrorCode {
+  if (statusMessage && Object.values(ApiErrorCode).includes(statusMessage as ApiErrorCode)) {
+    return statusMessage as ApiErrorCode
+  }
+
+  if (statusCode && statusCodeMap[statusCode]) {
+    return statusCodeMap[statusCode]
+  }
+
+  return ApiErrorCode.INTERNAL_ERROR
+}
+
+function shouldExposeMessage(statusCode?: number): boolean {
+  if (import.meta.dev) {
+    return true
+  }
+  return !statusCode || statusCode < 500
+}
+
 /**
  * API Error class with additional context
  */
@@ -56,7 +90,7 @@ export interface ApiError extends H3Error {
 export function createApiError(
   code: ApiErrorCode,
   message: string,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown>,
 ): ApiError {
   const statusCode = errorStatusMap[code] || 500
 
@@ -106,16 +140,24 @@ export function handleError(error: unknown): ApiError {
     return fromZodError(error)
   }
 
-  // H3 error
-  if (error instanceof H3Error) {
-    return createApiError(ApiErrorCode.INTERNAL_ERROR, error.message, {
-      originalStatusCode: error.statusCode,
+  // H3 error (or compatible shape)
+  if (error instanceof H3Error || (error && typeof error === 'object' && 'statusCode' in error)) {
+    const statusCode = (error as H3Error).statusCode
+    const statusMessage = (error as H3Error).statusMessage
+    const code = resolveErrorCode(statusCode, statusMessage)
+    const message = shouldExposeMessage(statusCode)
+      ? (error as H3Error).message
+      : 'An unexpected error occurred'
+
+    return createApiError(code, message, {
+      originalStatusCode: statusCode,
     })
   }
 
   // Generic error
   if (error instanceof Error) {
-    return createApiError(ApiErrorCode.INTERNAL_ERROR, error.message)
+    const message = shouldExposeMessage(500) ? error.message : 'An unexpected error occurred'
+    return createApiError(ApiErrorCode.INTERNAL_ERROR, message)
   }
 
   // Unknown error

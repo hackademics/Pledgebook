@@ -230,7 +230,7 @@ Query parameters from `getQuery()` are always strings or undefined. Use this pat
 const coerceNumber = (defaultValue: number) =>
   z.preprocess(
     (val) => (val === undefined || val === '' ? defaultValue : Number(val)),
-    z.number().int()
+    z.number().int(),
   )
 
 // Usage
@@ -596,7 +596,7 @@ page: z.coerce.number().default(1)
 // ✅ Use preprocess to handle undefined
 page: z.preprocess(
   (val) => (val === undefined || val === '' ? 1 : Number(val)),
-  z.number().int()
+  z.number().int(),
 ).pipe(z.number().min(1))
 ```
 
@@ -694,7 +694,7 @@ export type CreateEntityInput = z.output<typeof createEntitySchema>
 const coerceNumber = (defaultValue: number) =>
   z.preprocess(
     (val) => (val === undefined || val === '' ? defaultValue : Number(val)),
-    z.number().int()
+    z.number().int(),
   )
 
 export const listQuerySchema = z.object({

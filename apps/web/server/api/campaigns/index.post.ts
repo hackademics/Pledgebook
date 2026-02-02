@@ -1,6 +1,8 @@
 import { defineEventHandler } from 'h3'
 import { useCloudflare } from '../../utils/cloudflare'
 import { handleError } from '../../utils/errors'
+import { requireWalletAddress } from '../../utils/auth'
+import { requireTurnstile } from '../../utils/turnstile'
 import { sendCreated, parseBody } from '../../utils/response'
 import {
   createCampaignRepository,
@@ -20,11 +22,10 @@ export default defineEventHandler(async (event) => {
   try {
     const { DB } = useCloudflare(event)
 
+    await requireTurnstile(event)
+
     // Get creator address from header (in production, this would be from auth)
-    const creatorAddress = event.node.req.headers['x-wallet-address'] as string
-    if (!creatorAddress) {
-      throw new Error('Missing X-Wallet-Address header')
-    }
+    const creatorAddress = requireWalletAddress(event)
 
     // Parse and validate request body
     const input = await parseBody(event, createCampaignSchema)

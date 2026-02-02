@@ -26,14 +26,14 @@ export interface PledgeService {
   }>
   getByCampaign(
     campaignId: string,
-    query: ListPledgesQuery
+    query: ListPledgesQuery,
   ): Promise<{
     data: PledgeSummary[]
     meta: { page: number; limit: number; total: number; totalPages: number }
   }>
   getByPledger(
     pledgerAddress: string,
-    query: ListPledgesQuery
+    query: ListPledgesQuery,
   ): Promise<{
     data: PledgeSummary[]
     meta: { page: number; limit: number; total: number; totalPages: number }
@@ -84,7 +84,7 @@ export function createPledgeService(deps: PledgeServiceDependencies): PledgeServ
         throw createApiError(
           ApiErrorCode.NOT_FOUND,
           `Pledge with transaction hash '${txHash}' not found`,
-          { resourceType: 'pledge', resourceId: txHash }
+          { resourceType: 'pledge', resourceId: txHash },
         )
       }
 
@@ -116,7 +116,7 @@ export function createPledgeService(deps: PledgeServiceDependencies): PledgeServ
      */
     async getByCampaign(
       campaignId: string,
-      query: ListPledgesQuery
+      query: ListPledgesQuery,
     ): Promise<{
       data: PledgeSummary[]
       meta: { page: number; limit: number; total: number; totalPages: number }
@@ -128,7 +128,7 @@ export function createPledgeService(deps: PledgeServiceDependencies): PledgeServ
           throw createApiError(
             ApiErrorCode.NOT_FOUND,
             `Campaign with ID '${campaignId}' not found`,
-            { resourceType: 'campaign', resourceId: campaignId }
+            { resourceType: 'campaign', resourceId: campaignId },
           )
         }
       }
@@ -151,7 +151,7 @@ export function createPledgeService(deps: PledgeServiceDependencies): PledgeServ
      */
     async getByPledger(
       pledgerAddress: string,
-      query: ListPledgesQuery
+      query: ListPledgesQuery,
     ): Promise<{
       data: PledgeSummary[]
       meta: { page: number; limit: number; total: number; totalPages: number }
@@ -180,7 +180,7 @@ export function createPledgeService(deps: PledgeServiceDependencies): PledgeServ
         throw createApiError(
           ApiErrorCode.CONFLICT,
           `Pledge with transaction hash '${input.txHash}' already exists`,
-          { field: 'txHash', value: input.txHash }
+          { field: 'txHash', value: input.txHash },
         )
       }
 
@@ -191,7 +191,7 @@ export function createPledgeService(deps: PledgeServiceDependencies): PledgeServ
           throw createApiError(
             ApiErrorCode.NOT_FOUND,
             `Campaign with ID '${input.campaignId}' not found`,
-            { resourceType: 'campaign', resourceId: input.campaignId }
+            { resourceType: 'campaign', resourceId: input.campaignId },
           )
         }
 
@@ -199,7 +199,7 @@ export function createPledgeService(deps: PledgeServiceDependencies): PledgeServ
           throw createApiError(
             ApiErrorCode.VALIDATION_ERROR,
             'Can only pledge to active campaigns',
-            { campaignStatus: campaign.status }
+            { campaignStatus: campaign.status },
           )
         }
 
@@ -214,7 +214,7 @@ export function createPledgeService(deps: PledgeServiceDependencies): PledgeServ
       // Check if this is a new pledger for the campaign
       const isNewPledger = !(await pledgeRepository.hasPledgedToCampaign(
         pledgerAddress,
-        input.campaignId
+        input.campaignId,
       ))
 
       // Create pledge

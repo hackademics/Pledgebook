@@ -1,5 +1,5 @@
 import { defineEventHandler } from 'h3'
-import { useCloudflare } from '../../utils/cloudflare'
+import { useCloudflare, useCloudflareOptional } from '../../utils/cloudflare'
 import { handleError } from '../../utils/errors'
 import { sendSuccess, parseQuery } from '../../utils/response'
 import {
@@ -30,9 +30,23 @@ import {
 export default defineEventHandler(async (event) => {
   try {
     const { DB } = useCloudflare(event)
+    const cloudflare = useCloudflareOptional(event)
 
     // Parse and validate query parameters
     const query = parseQuery(event, listCampaignsQuerySchema)
+
+    const cacheKey = `campaigns:${JSON.stringify(query)}`
+    const cache = cloudflare?.CACHE
+    if (cache) {
+      const cached = await cache.get(cacheKey, 'json')
+      if (cached && typeof cached === 'object' && 'data' in cached && 'meta' in cached) {
+        return sendSuccess(
+          event,
+          (cached as { data: unknown }).data as unknown,
+          (cached as { meta: Record<string, unknown> }).meta,
+        )
+      }
+    }
 
     // Initialize repository and service
     const repository = createCampaignRepository(DB)
@@ -40,6 +54,12 @@ export default defineEventHandler(async (event) => {
 
     // Get paginated campaigns
     const { data, meta } = await service.getAll(query)
+
+    if (cache) {
+      await cache.put(cacheKey, JSON.stringify({ data, meta }), {
+        expirationTtl: 60,
+      })
+    }
 
     return sendSuccess(event, data, meta)
   } catch (error) {

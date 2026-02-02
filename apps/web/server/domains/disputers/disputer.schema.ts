@@ -183,7 +183,7 @@ export const resolveDisputerSchema = z.object({
 const coerceNumber = (defaultValue: number) =>
   z.preprocess(
     (val) => (val === undefined || val === '' ? defaultValue : Number(val)),
-    z.number().int()
+    z.number().int(),
   )
 
 /**

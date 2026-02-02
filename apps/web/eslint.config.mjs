@@ -1,22 +1,17 @@
-// ESLint Configuration
-import { createConfigForNuxt } from '@nuxt/eslint-config/flat'
+// ESLint Configuration - uses shared config from @pledgebook/eslint-config
+import { createNuxtConfig } from '@pledgebook/eslint-config/nuxt'
 
-export default createConfigForNuxt({
-  features: {
-    tooling: true,
-    stylistic: {
-      semi: false,
-      quotes: 'single',
-    },
-  },
-}).append({
+export default createNuxtConfig().append({
   rules: {
-    'vue/multi-word-component-names': 'off',
-    'vue/no-v-html': 'warn',
-    '@typescript-eslint/no-explicit-any': 'warn',
-    '@typescript-eslint/no-unused-vars': [
+    'vue/html-self-closing': [
       'error',
-      { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      {
+        html: {
+          void: 'any',
+          normal: 'never',
+          component: 'always',
+        },
+      },
     ],
   },
 })

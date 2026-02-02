@@ -81,17 +81,17 @@ workflow.addStep(
       const baselineProof = await deco.prove(
         inputs.privateEndpoint,
         inputs.keySecret,
-        'extract_weight'
+        'extract_weight',
       )
       const currentProof = await deco.prove(
         inputs.privateEndpoint,
         inputs.keySecret,
-        'extract_weight'
+        'extract_weight',
       )
       const deltaProof = await deco.generateZkp('weight_delta >= 50', [baselineProof, currentProof])
       return { deltaProof }
     },
-  })
+  }),
 )
 ```
 
@@ -146,7 +146,7 @@ CampaignSchema = CampaignSchema.extend({
       type: z.enum(['API', 'IMAGE', 'MANUAL']),
       endpoint: z.string(),
       keyHash: z.string().optional(),
-    })
+    }),
   ),
 })
 ```
@@ -203,7 +203,7 @@ workflow.addStep(
           return await deco.prove(
             source.endpoint,
             source.keyHash ? secrets[source.keyHash] : null,
-            'extract_value'
+            'extract_value',
           )
         } else if (source.type === 'IMAGE') {
           // AI OCR
@@ -217,7 +217,7 @@ workflow.addStep(
       const currentData = await Promise.all(fetches)
       return { currentData }
     },
-  })
+  }),
 )
 
 // Step 2: AI consensus with proofs
@@ -238,7 +238,7 @@ workflow.addStep(
         zkProof: inputs.privacyMode ? generateZkp(success, inputs) : null,
       }
     },
-  })
+  }),
 )
 
 // Callback to contract

@@ -1,7 +1,8 @@
-import { defineEventHandler, getHeader } from 'h3'
+import { defineEventHandler } from 'h3'
 import { useCloudflare } from '../../../utils/cloudflare'
 import { handleError } from '../../../utils/errors'
 import { sendSuccess, parseBody, getRequiredParam } from '../../../utils/response'
+import { requireWalletAddress } from '../../../utils/auth'
 import {
   createDisputerRepository,
   createDisputerService,
@@ -26,10 +27,7 @@ export default defineEventHandler(async (event) => {
     const body = await parseBody(event, resolveDisputerSchema)
 
     // TODO: Get resolver address from authenticated admin session
-    const resolverAddress = getHeader(event, 'x-wallet-address')
-    if (!resolverAddress) {
-      throw handleError(new Error('Authentication required'))
-    }
+    const resolverAddress = requireWalletAddress(event)
 
     // TODO: Verify resolver has admin/verifier role
 

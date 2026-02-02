@@ -1,7 +1,9 @@
-import { defineEventHandler, getHeader } from 'h3'
+import { defineEventHandler } from 'h3'
 import { useCloudflare } from '../../utils/cloudflare'
 import { handleError } from '../../utils/errors'
 import { sendCreated, parseBody } from '../../utils/response'
+import { requireWalletAddress } from '../../utils/auth'
+import { requireTurnstile } from '../../utils/turnstile'
 import {
   createDisputerRepository,
   createDisputerService,
@@ -19,14 +21,13 @@ export default defineEventHandler(async (event) => {
   try {
     const { DB } = useCloudflare(event)
 
+    await requireTurnstile(event)
+
     // Parse and validate request body
     const body = await parseBody(event, createDisputerSchema)
 
     // TODO: Get disputer address from authenticated session
-    const disputerAddress = getHeader(event, 'x-wallet-address')
-    if (!disputerAddress) {
-      throw handleError(new Error('Authentication required'))
-    }
+    const disputerAddress = requireWalletAddress(event)
 
     // Initialize repositories and service
     const disputerRepository = createDisputerRepository(DB)

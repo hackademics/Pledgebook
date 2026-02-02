@@ -2,7 +2,7 @@
  * Counter composable example
  */
 export function useCounter(initialValue = 0) {
-  const count = useState('counter', () => initialValue)
+  const count = ref(initialValue)
 
   const increment = () => {
     count.value++

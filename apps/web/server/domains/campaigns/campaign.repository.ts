@@ -21,7 +21,7 @@ export interface CampaignRepository {
   findAll(query: ListCampaignsQuery): Promise<{ data: Campaign[]; total: number }>
   findByCreator(
     creatorAddress: string,
-    query: ListCampaignsQuery
+    query: ListCampaignsQuery,
   ): Promise<{ data: Campaign[]; total: number }>
   findFeatured(limit?: number): Promise<Campaign[]>
   findActive(limit?: number): Promise<Campaign[]>
@@ -29,7 +29,7 @@ export interface CampaignRepository {
   create(creatorAddress: string, input: CreateCampaignInput): Promise<Campaign>
   update(
     id: string,
-    input: UpdateCampaignInput | AdminUpdateCampaignInput
+    input: UpdateCampaignInput | AdminUpdateCampaignInput,
   ): Promise<Campaign | null>
   updateStatus(id: string, status: CampaignStatus): Promise<Campaign | null>
   softDelete(id: string): Promise<boolean>
@@ -118,12 +118,16 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
 
       if (category !== undefined) {
         conditions.push('categories LIKE ?')
-        params.push(`%"${category}"%`)
+        // Escape LIKE special characters to prevent SQL injection
+        const escapedCategory = category.replace(/[%_\\]/g, '\\$&')
+        params.push(`%"${escapedCategory}"%`)
       }
 
       if (search) {
         conditions.push('(name LIKE ? OR purpose LIKE ?)')
-        const searchPattern = `%${search}%`
+        // Escape LIKE special characters in search pattern
+        const escapedSearch = search.replace(/[%_\\]/g, '\\$&')
+        const searchPattern = `%${escapedSearch}%`
         params.push(searchPattern, searchPattern)
       }
 
@@ -150,7 +154,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
           ${whereClause} 
           ORDER BY ${safeSort} ${safeOrder} 
           LIMIT ? OFFSET ?
-        `
+        `,
         )
         .bind(...params, limit, offset)
         .all<Campaign>()
@@ -166,7 +170,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
      */
     async findByCreator(
       creatorAddress: string,
-      query: ListCampaignsQuery
+      query: ListCampaignsQuery,
     ): Promise<{ data: Campaign[]; total: number }> {
       return this.findAll({ ...query, creatorAddress })
     },
@@ -182,7 +186,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
           WHERE is_featured = 1 AND is_deleted = 0 AND status = 'active'
           ORDER BY created_at DESC 
           LIMIT ?
-        `
+        `,
         )
         .bind(limit)
         .all<Campaign>()
@@ -201,7 +205,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
           WHERE status = 'active' AND is_deleted = 0 AND end_date > datetime('now')
           ORDER BY amount_pledged DESC 
           LIMIT ?
-        `
+        `,
         )
         .bind(limit)
         .all<Campaign>()
@@ -220,7 +224,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
           WHERE is_showcased = 1 AND is_deleted = 0 AND status = 'active'
           ORDER BY amount_pledged DESC 
           LIMIT ?
-        `
+        `,
         )
         .bind(limit)
         .all<Campaign>()
@@ -251,7 +255,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'draft', '{}', ?, ?, '0', '0', ?, 0.0, '0',
             ?, ?, ?, ?, 0, 0, 0, '[]', '[]', 0, NULL, ?, ?, 0, 0, 0, 0, ?, ?, 0)
           RETURNING *
-        `
+        `,
         )
         .bind(
           campaignId,
@@ -272,7 +276,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
           input.startDate ?? null,
           input.endDate,
           now,
-          now
+          now,
         )
         .first<Campaign>()
 
@@ -288,7 +292,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
      */
     async update(
       id: string,
-      input: UpdateCampaignInput | AdminUpdateCampaignInput
+      input: UpdateCampaignInput | AdminUpdateCampaignInput,
     ): Promise<Campaign | null> {
       const updates: string[] = []
       const params: (string | number | null)[] = []
@@ -372,7 +376,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
 
       const result = await db
         .prepare(
-          `UPDATE campaigns SET ${updates.join(', ')} WHERE campaign_id = ? AND is_deleted = 0 RETURNING *`
+          `UPDATE campaigns SET ${updates.join(', ')} WHERE campaign_id = ? AND is_deleted = 0 RETURNING *`,
         )
         .bind(...params)
         .first<Campaign>()
@@ -423,7 +427,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
 
       const result = await db
         .prepare(
-          'UPDATE campaigns SET is_deleted = 1, deleted_at = ?, updated_at = ? WHERE campaign_id = ?'
+          'UPDATE campaigns SET is_deleted = 1, deleted_at = ?, updated_at = ? WHERE campaign_id = ?',
         )
         .bind(now, now, id)
         .run()
@@ -495,7 +499,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
             amount_pledged = CAST((CAST(amount_pledged AS INTEGER) + CAST(? AS INTEGER)) AS TEXT),
             updated_at = ?
           WHERE campaign_id = ?
-        `
+        `,
         )
         .bind(uniquePledgerIncrement, amount, new Date().toISOString(), id)
         .run()
@@ -507,7 +511,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
     async incrementVoucherCount(id: string): Promise<void> {
       await db
         .prepare(
-          'UPDATE campaigns SET voucher_count = voucher_count + 1, updated_at = ? WHERE campaign_id = ?'
+          'UPDATE campaigns SET voucher_count = voucher_count + 1, updated_at = ? WHERE campaign_id = ?',
         )
         .bind(new Date().toISOString(), id)
         .run()
@@ -519,7 +523,7 @@ export function createCampaignRepository(db: D1Database): CampaignRepository {
     async incrementDisputerCount(id: string): Promise<void> {
       await db
         .prepare(
-          'UPDATE campaigns SET disputer_count = disputer_count + 1, is_disputed = 1, updated_at = ? WHERE campaign_id = ?'
+          'UPDATE campaigns SET disputer_count = disputer_count + 1, is_disputed = 1, updated_at = ? WHERE campaign_id = ?',
         )
         .bind(new Date().toISOString(), id)
         .run()

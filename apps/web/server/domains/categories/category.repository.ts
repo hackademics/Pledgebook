@@ -126,7 +126,7 @@ export function createCategoryRepository(db: D1Database): CategoryRepository {
     async findFeatured(): Promise<Category[]> {
       const result = await db
         .prepare(
-          'SELECT * FROM categories WHERE is_featured = 1 AND is_active = 1 ORDER BY display_order ASC'
+          'SELECT * FROM categories WHERE is_featured = 1 AND is_active = 1 ORDER BY display_order ASC',
         )
         .all<Category>()
 
@@ -150,7 +150,7 @@ export function createCategoryRepository(db: D1Database): CategoryRepository {
     async findChildren(parentId: string): Promise<Category[]> {
       const result = await db
         .prepare(
-          'SELECT * FROM categories WHERE parent_category_id = ? AND is_active = 1 ORDER BY display_order ASC'
+          'SELECT * FROM categories WHERE parent_category_id = ? AND is_active = 1 ORDER BY display_order ASC',
         )
         .bind(parentId)
         .all<Category>()
@@ -171,7 +171,7 @@ export function createCategoryRepository(db: D1Database): CategoryRepository {
             parent_category_id, display_order, is_active, is_featured,
             created_at, updated_at
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-          RETURNING *`
+          RETURNING *`,
         )
         .bind(
           input.id,
@@ -184,7 +184,7 @@ export function createCategoryRepository(db: D1Database): CategoryRepository {
           input.isActive ? 1 : 0,
           input.isFeatured ? 1 : 0,
           now,
-          now
+          now,
         )
         .first<Category>()
 

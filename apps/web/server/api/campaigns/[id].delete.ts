@@ -1,6 +1,7 @@
 import { defineEventHandler } from 'h3'
 import { useCloudflare } from '../../utils/cloudflare'
 import { handleError } from '../../utils/errors'
+import { requireWalletAddress } from '../../utils/auth'
 import { respondNoContent, getRequiredParam } from '../../utils/response'
 import { createCampaignRepository, createCampaignService } from '../../domains/campaigns'
 
@@ -20,10 +21,7 @@ export default defineEventHandler(async (event) => {
     const id = getRequiredParam(event, 'id')
 
     // Get creator address from header
-    const creatorAddress = event.node.req.headers['x-wallet-address'] as string
-    if (!creatorAddress) {
-      throw new Error('Missing X-Wallet-Address header')
-    }
+    const creatorAddress = requireWalletAddress(event)
 
     // Initialize repository and service
     const repository = createCampaignRepository(DB)

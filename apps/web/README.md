@@ -15,6 +15,21 @@ pnpm build
 pnpm preview
 ```
 
+## CRE Callback Verification
+
+Use the script below to confirm CRE callback logs on staging/testnet.
+
+```bash
+API_BASE=https://staging.pledgebook.example \
+REQUEST_ID=00000000-0000-0000-0000-000000000000 \
+pnpm cre:verify-callback
+```
+
+Optional environment variables:
+
+- `POLL_INTERVAL_MS` (default: 5000)
+- `TIMEOUT_MS` (default: 120000)
+
 ## Project Structure
 
 ```

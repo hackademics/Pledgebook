@@ -26,14 +26,14 @@ export interface DisputerService {
   }>
   getByCampaign(
     campaignId: string,
-    query: ListDisputersQuery
+    query: ListDisputersQuery,
   ): Promise<{
     data: DisputerSummary[]
     meta: { page: number; limit: number; total: number; totalPages: number }
   }>
   getByDisputer(
     disputerAddress: string,
-    query: ListDisputersQuery
+    query: ListDisputersQuery,
   ): Promise<{
     data: DisputerSummary[]
     meta: { page: number; limit: number; total: number; totalPages: number }
@@ -45,7 +45,7 @@ export interface DisputerService {
   resolve(
     id: string,
     resolverAddress: string,
-    input: ResolveDisputerInput
+    input: ResolveDisputerInput,
   ): Promise<DisputerResponse>
   activateDispute(id: string): Promise<DisputerResponse>
   withdrawDispute(id: string, disputerAddress: string): Promise<DisputerResponse>
@@ -91,7 +91,7 @@ export function createDisputerService(deps: DisputerServiceDependencies): Disput
         throw createApiError(
           ApiErrorCode.NOT_FOUND,
           `Dispute with transaction hash '${txHash}' not found`,
-          { resourceType: 'disputer', resourceId: txHash }
+          { resourceType: 'disputer', resourceId: txHash },
         )
       }
 
@@ -123,7 +123,7 @@ export function createDisputerService(deps: DisputerServiceDependencies): Disput
      */
     async getByCampaign(
       campaignId: string,
-      query: ListDisputersQuery
+      query: ListDisputersQuery,
     ): Promise<{
       data: DisputerSummary[]
       meta: { page: number; limit: number; total: number; totalPages: number }
@@ -135,7 +135,7 @@ export function createDisputerService(deps: DisputerServiceDependencies): Disput
           throw createApiError(
             ApiErrorCode.NOT_FOUND,
             `Campaign with ID '${campaignId}' not found`,
-            { resourceType: 'campaign', resourceId: campaignId }
+            { resourceType: 'campaign', resourceId: campaignId },
           )
         }
       }
@@ -158,7 +158,7 @@ export function createDisputerService(deps: DisputerServiceDependencies): Disput
      */
     async getByDisputer(
       disputerAddress: string,
-      query: ListDisputersQuery
+      query: ListDisputersQuery,
     ): Promise<{
       data: DisputerSummary[]
       meta: { page: number; limit: number; total: number; totalPages: number }
@@ -203,14 +203,14 @@ export function createDisputerService(deps: DisputerServiceDependencies): Disput
         throw createApiError(
           ApiErrorCode.CONFLICT,
           `Dispute with transaction hash '${input.stakeTxHash}' already exists`,
-          { field: 'stakeTxHash', value: input.stakeTxHash }
+          { field: 'stakeTxHash', value: input.stakeTxHash },
         )
       }
 
       // Check if user has already disputed this campaign
       const hasDisputed = await disputerRepository.hasDisputedCampaign(
         disputerAddress,
-        input.campaignId
+        input.campaignId,
       )
       if (hasDisputed) {
         throw createApiError(ApiErrorCode.CONFLICT, 'You have already disputed this campaign', {
@@ -225,7 +225,7 @@ export function createDisputerService(deps: DisputerServiceDependencies): Disput
           throw createApiError(
             ApiErrorCode.NOT_FOUND,
             `Campaign with ID '${input.campaignId}' not found`,
-            { resourceType: 'campaign', resourceId: input.campaignId }
+            { resourceType: 'campaign', resourceId: input.campaignId },
           )
         }
 
@@ -276,7 +276,7 @@ export function createDisputerService(deps: DisputerServiceDependencies): Disput
     async resolve(
       id: string,
       resolverAddress: string,
-      input: ResolveDisputerInput
+      input: ResolveDisputerInput,
     ): Promise<DisputerResponse> {
       const disputer = await disputerRepository.findById(id)
       if (!disputer) {
@@ -291,7 +291,7 @@ export function createDisputerService(deps: DisputerServiceDependencies): Disput
         throw createApiError(
           ApiErrorCode.VALIDATION_ERROR,
           'Can only resolve pending or active disputes',
-          { currentStatus: disputer.status }
+          { currentStatus: disputer.status },
         )
       }
 
@@ -319,7 +319,7 @@ export function createDisputerService(deps: DisputerServiceDependencies): Disput
         throw createApiError(
           ApiErrorCode.VALIDATION_ERROR,
           'Only pending disputes can be activated',
-          { currentStatus: disputer.status }
+          { currentStatus: disputer.status },
         )
       }
 
@@ -347,7 +347,7 @@ export function createDisputerService(deps: DisputerServiceDependencies): Disput
       if (disputer.disputer_address.toLowerCase() !== disputerAddress.toLowerCase()) {
         throw createApiError(
           ApiErrorCode.FORBIDDEN,
-          'You are not authorized to withdraw this dispute'
+          'You are not authorized to withdraw this dispute',
         )
       }
 
@@ -356,7 +356,7 @@ export function createDisputerService(deps: DisputerServiceDependencies): Disput
         throw createApiError(
           ApiErrorCode.VALIDATION_ERROR,
           'Only pending disputes can be withdrawn',
-          { currentStatus: disputer.status }
+          { currentStatus: disputer.status },
         )
       }
 

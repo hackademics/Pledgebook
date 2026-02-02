@@ -25,14 +25,14 @@ export interface VoucherService {
   }>
   getByCampaign(
     campaignId: string,
-    query: ListVouchersQuery
+    query: ListVouchersQuery,
   ): Promise<{
     data: VoucherSummary[]
     meta: { page: number; limit: number; total: number; totalPages: number }
   }>
   getByVoucher(
     voucherAddress: string,
-    query: ListVouchersQuery
+    query: ListVouchersQuery,
   ): Promise<{
     data: VoucherSummary[]
     meta: { page: number; limit: number; total: number; totalPages: number }
@@ -46,7 +46,7 @@ export interface VoucherService {
     id: string,
     slashTxHash: string,
     slashAmount: string,
-    reason: string
+    reason: string,
   ): Promise<VoucherResponse>
 }
 
@@ -90,7 +90,7 @@ export function createVoucherService(deps: VoucherServiceDependencies): VoucherS
         throw createApiError(
           ApiErrorCode.NOT_FOUND,
           `Voucher with transaction hash '${txHash}' not found`,
-          { resourceType: 'voucher', resourceId: txHash }
+          { resourceType: 'voucher', resourceId: txHash },
         )
       }
 
@@ -122,7 +122,7 @@ export function createVoucherService(deps: VoucherServiceDependencies): VoucherS
      */
     async getByCampaign(
       campaignId: string,
-      query: ListVouchersQuery
+      query: ListVouchersQuery,
     ): Promise<{
       data: VoucherSummary[]
       meta: { page: number; limit: number; total: number; totalPages: number }
@@ -134,7 +134,7 @@ export function createVoucherService(deps: VoucherServiceDependencies): VoucherS
           throw createApiError(
             ApiErrorCode.NOT_FOUND,
             `Campaign with ID '${campaignId}' not found`,
-            { resourceType: 'campaign', resourceId: campaignId }
+            { resourceType: 'campaign', resourceId: campaignId },
           )
         }
       }
@@ -157,7 +157,7 @@ export function createVoucherService(deps: VoucherServiceDependencies): VoucherS
      */
     async getByVoucher(
       voucherAddress: string,
-      query: ListVouchersQuery
+      query: ListVouchersQuery,
     ): Promise<{
       data: VoucherSummary[]
       meta: { page: number; limit: number; total: number; totalPages: number }
@@ -194,14 +194,14 @@ export function createVoucherService(deps: VoucherServiceDependencies): VoucherS
         throw createApiError(
           ApiErrorCode.CONFLICT,
           `Voucher with transaction hash '${input.stakeTxHash}' already exists`,
-          { field: 'stakeTxHash', value: input.stakeTxHash }
+          { field: 'stakeTxHash', value: input.stakeTxHash },
         )
       }
 
       // Check if user has already vouched for this campaign
       const hasVouched = await voucherRepository.hasVouchedForCampaign(
         voucherAddress,
-        input.campaignId
+        input.campaignId,
       )
       if (hasVouched) {
         throw createApiError(ApiErrorCode.CONFLICT, 'You have already vouched for this campaign', {
@@ -216,7 +216,7 @@ export function createVoucherService(deps: VoucherServiceDependencies): VoucherS
           throw createApiError(
             ApiErrorCode.NOT_FOUND,
             `Campaign with ID '${input.campaignId}' not found`,
-            { resourceType: 'campaign', resourceId: input.campaignId }
+            { resourceType: 'campaign', resourceId: input.campaignId },
           )
         }
 
@@ -226,7 +226,7 @@ export function createVoucherService(deps: VoucherServiceDependencies): VoucherS
           throw createApiError(
             ApiErrorCode.VALIDATION_ERROR,
             'Cannot vouch for campaigns that are complete, failed, or cancelled',
-            { campaignStatus: campaign.status }
+            { campaignStatus: campaign.status },
           )
         }
       }
@@ -279,7 +279,7 @@ export function createVoucherService(deps: VoucherServiceDependencies): VoucherS
         throw createApiError(
           ApiErrorCode.VALIDATION_ERROR,
           'Only pending vouchers can be activated',
-          { currentStatus: voucher.status }
+          { currentStatus: voucher.status },
         )
       }
 
@@ -307,7 +307,7 @@ export function createVoucherService(deps: VoucherServiceDependencies): VoucherS
         throw createApiError(
           ApiErrorCode.VALIDATION_ERROR,
           'Only active vouchers can be released',
-          { currentStatus: voucher.status }
+          { currentStatus: voucher.status },
         )
       }
 
@@ -329,7 +329,7 @@ export function createVoucherService(deps: VoucherServiceDependencies): VoucherS
       id: string,
       slashTxHash: string,
       slashAmount: string,
-      reason: string
+      reason: string,
     ): Promise<VoucherResponse> {
       const voucher = await voucherRepository.findById(id)
       if (!voucher) {

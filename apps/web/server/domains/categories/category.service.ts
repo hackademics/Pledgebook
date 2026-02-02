@@ -97,7 +97,7 @@ export function createCategoryService(repository: CategoryRepository): CategoryS
         throw createApiError(
           ApiErrorCode.NOT_FOUND,
           `Parent category with ID '${parentId}' not found`,
-          { resourceType: 'category', resourceId: parentId }
+          { resourceType: 'category', resourceId: parentId },
         )
       }
 
@@ -116,7 +116,7 @@ export function createCategoryService(repository: CategoryRepository): CategoryS
         throw createApiError(
           ApiErrorCode.CONFLICT,
           `Category with ID '${input.id}' already exists`,
-          { field: 'id', value: input.id }
+          { field: 'id', value: input.id },
         )
       }
 
@@ -127,7 +127,7 @@ export function createCategoryService(repository: CategoryRepository): CategoryS
           throw createApiError(
             ApiErrorCode.VALIDATION_ERROR,
             `Parent category '${input.parentCategoryId}' does not exist`,
-            { field: 'parentCategoryId', value: input.parentCategoryId }
+            { field: 'parentCategoryId', value: input.parentCategoryId },
           )
         }
 
@@ -164,7 +164,7 @@ export function createCategoryService(repository: CategoryRepository): CategoryS
           throw createApiError(
             ApiErrorCode.VALIDATION_ERROR,
             `Parent category '${input.parentCategoryId}' does not exist`,
-            { field: 'parentCategoryId', value: input.parentCategoryId }
+            { field: 'parentCategoryId', value: input.parentCategoryId },
           )
         }
 
@@ -205,7 +205,7 @@ export function createCategoryService(repository: CategoryRepository): CategoryS
         throw createApiError(
           ApiErrorCode.CONFLICT,
           `Cannot delete category '${id}' because it has ${children.length} child categories`,
-          { childCount: children.length }
+          { childCount: children.length },
         )
       }
 

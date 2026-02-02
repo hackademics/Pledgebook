@@ -1,0 +1,26 @@
+{
+  "name": "pledgebook-waf-baseline",
+  "description": "Baseline WAF and bot rules for Pledgebook",
+  "kind": "zone",
+  "phase": "http_request_firewall_custom",
+  "rules": [
+    {
+      "description": "Block low-score bots on API",
+      "expression": "(http.request.uri.path starts_with \"/api/\") and (cf.bot_management.score < 30) and (not cf.bot_management.verified_bot)",
+      "action": "block",
+      "enabled": true
+    },
+    {
+      "description": "JS challenge high threat API traffic",
+      "expression": "(http.request.uri.path starts_with \"/api/\") and (cf.threat_score > 20)",
+      "action": "js_challenge",
+      "enabled": true
+    },
+    {
+      "description": "Allowlist admin IPs",
+      "expression": "(ip.src in {ADMIN_IP_SET})",
+      "action": "skip",
+      "enabled": true
+    }
+  ]
+}

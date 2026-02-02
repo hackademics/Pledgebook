@@ -21,11 +21,11 @@ export interface DisputerRepository {
   findAll(query: ListDisputersQuery): Promise<{ data: Disputer[]; total: number }>
   findByCampaign(
     campaignId: string,
-    query: ListDisputersQuery
+    query: ListDisputersQuery,
   ): Promise<{ data: Disputer[]; total: number }>
   findByDisputer(
     disputerAddress: string,
-    query: ListDisputersQuery
+    query: ListDisputersQuery,
   ): Promise<{ data: Disputer[]; total: number }>
   findActiveByCampaign(campaignId: string): Promise<Disputer[]>
   findPending(): Promise<Disputer[]>
@@ -34,7 +34,7 @@ export interface DisputerRepository {
   resolve(
     id: string,
     resolverAddress: string,
-    input: ResolveDisputerInput
+    input: ResolveDisputerInput,
   ): Promise<Disputer | null>
   updateStatus(id: string, status: DisputerStatus): Promise<Disputer | null>
   exists(id: string): Promise<boolean>
@@ -130,7 +130,7 @@ export function createDisputerRepository(db: D1Database): DisputerRepository {
           ${whereClause} 
           ORDER BY ${safeSort} ${safeOrder} 
           LIMIT ? OFFSET ?
-        `
+        `,
         )
         .bind(...params, limit, offset)
         .all<Disputer>()
@@ -146,7 +146,7 @@ export function createDisputerRepository(db: D1Database): DisputerRepository {
      */
     async findByCampaign(
       campaignId: string,
-      query: ListDisputersQuery
+      query: ListDisputersQuery,
     ): Promise<{ data: Disputer[]; total: number }> {
       return this.findAll({ ...query, campaignId })
     },
@@ -156,7 +156,7 @@ export function createDisputerRepository(db: D1Database): DisputerRepository {
      */
     async findByDisputer(
       disputerAddress: string,
-      query: ListDisputersQuery
+      query: ListDisputersQuery,
     ): Promise<{ data: Disputer[]; total: number }> {
       return this.findAll({ ...query, disputerAddress })
     },
@@ -171,7 +171,7 @@ export function createDisputerRepository(db: D1Database): DisputerRepository {
           SELECT * FROM disputers 
           WHERE campaign_id = ? AND status IN ('pending', 'active')
           ORDER BY disputed_at DESC
-        `
+        `,
         )
         .bind(campaignId)
         .all<Disputer>()
@@ -189,7 +189,7 @@ export function createDisputerRepository(db: D1Database): DisputerRepository {
           SELECT * FROM disputers 
           WHERE status = 'pending'
           ORDER BY disputed_at ASC
-        `
+        `,
         )
         .all<Disputer>()
 
@@ -215,7 +215,7 @@ export function createDisputerRepository(db: D1Database): DisputerRepository {
           ) VALUES (?, ?, ?, ?, 'pending', ?, ?, ?, ?, NULL, ?, ?, NULL, NULL,
             NULL, NULL, '0', '0', '0', ?, ?, ?, ?)
           RETURNING *
-        `
+        `,
         )
         .bind(
           disputerId,
@@ -231,7 +231,7 @@ export function createDisputerRepository(db: D1Database): DisputerRepository {
           input.expiresAt ?? null,
           now,
           now,
-          now
+          now,
         )
         .first<Disputer>()
 
@@ -281,7 +281,7 @@ export function createDisputerRepository(db: D1Database): DisputerRepository {
     async resolve(
       id: string,
       resolverAddress: string,
-      input: ResolveDisputerInput
+      input: ResolveDisputerInput,
     ): Promise<Disputer | null> {
       const now = new Date().toISOString()
 
@@ -315,7 +315,7 @@ export function createDisputerRepository(db: D1Database): DisputerRepository {
             updated_at = ?
           WHERE disputer_id = ?
           RETURNING *
-        `
+        `,
         )
         .bind(
           newStatus,
@@ -328,7 +328,7 @@ export function createDisputerRepository(db: D1Database): DisputerRepository {
           input.stakeReturned ?? null,
           input.stakeSlashed ?? null,
           now,
-          id
+          id,
         )
         .first<Disputer>()
 

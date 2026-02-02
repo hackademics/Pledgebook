@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <linearGradient id="rabby-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#8697FF"/>
+      <stop offset="100%" style="stop-color:#ABB8FF"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#rabby-grad)"/>
+  <ellipse cx="100" cy="105" rx="55" ry="45" fill="#fff"/>
+  <ellipse cx="78" cy="95" rx="8" ry="10" fill="#1C1C1C"/>
+  <ellipse cx="122" cy="95" rx="8" ry="10" fill="#1C1C1C"/>
+  <path d="M50 70 Q45 50 60 45 Q80 40 85 55" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+  <path d="M150 70 Q155 50 140 45 Q120 40 115 55" fill="none" stroke="#fff" stroke-width="8" stroke-linecap="round"/>
+</svg>

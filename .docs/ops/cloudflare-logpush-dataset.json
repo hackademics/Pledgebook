@@ -1,0 +1,44 @@
+{
+  "datasets": [
+    {
+      "name": "http_requests",
+      "fields": [
+        "ClientIP",
+        "ClientRequestHost",
+        "ClientRequestMethod",
+        "ClientRequestPath",
+        "ClientRequestURI",
+        "EdgeResponseStatus",
+        "RayID",
+        "CacheCacheStatus",
+        "EdgeStartTimestamp",
+        "EdgeEndTimestamp",
+        "OriginResponseStatus",
+        "WorkerCPUTime",
+        "WorkerStatus"
+      ],
+      "filter": "ClientRequestPath starts_with \"/api/\""
+    },
+    {
+      "name": "firewall_events",
+      "fields": [
+        "RayID",
+        "ClientIP",
+        "ClientRequestPath",
+        "Action",
+        "Source",
+        "RuleID",
+        "RuleMessage",
+        "BotScore"
+      ]
+    },
+    {
+      "name": "workers_trace_events",
+      "fields": ["Outcome", "ScriptName", "CPUTime", "EventTimestamp", "RayID"]
+    },
+    {
+      "name": "workers_invocations",
+      "fields": ["ScriptName", "EventType", "SuccessCount", "ErrorCount", "DurationMs"]
+    }
+  ]
+}

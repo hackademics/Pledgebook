@@ -19,11 +19,11 @@ export interface PledgeRepository {
   findAll(query: ListPledgesQuery): Promise<{ data: Pledge[]; total: number }>
   findByCampaign(
     campaignId: string,
-    query: ListPledgesQuery
+    query: ListPledgesQuery,
   ): Promise<{ data: Pledge[]; total: number }>
   findByPledger(
     pledgerAddress: string,
-    query: ListPledgesQuery
+    query: ListPledgesQuery,
   ): Promise<{ data: Pledge[]; total: number }>
   create(pledgerAddress: string, input: CreatePledgeInput): Promise<Pledge>
   update(id: string, input: UpdatePledgeInput): Promise<Pledge | null>
@@ -115,7 +115,7 @@ export function createPledgeRepository(db: D1Database): PledgeRepository {
           ${whereClause} 
           ORDER BY ${safeSort} ${safeOrder} 
           LIMIT ? OFFSET ?
-        `
+        `,
         )
         .bind(...params, limit, offset)
         .all<Pledge>()
@@ -131,7 +131,7 @@ export function createPledgeRepository(db: D1Database): PledgeRepository {
      */
     async findByCampaign(
       campaignId: string,
-      query: ListPledgesQuery
+      query: ListPledgesQuery,
     ): Promise<{ data: Pledge[]; total: number }> {
       return this.findAll({ ...query, campaignId })
     },
@@ -141,7 +141,7 @@ export function createPledgeRepository(db: D1Database): PledgeRepository {
      */
     async findByPledger(
       pledgerAddress: string,
-      query: ListPledgesQuery
+      query: ListPledgesQuery,
     ): Promise<{ data: Pledge[]; total: number }> {
       return this.findAll({ ...query, pledgerAddress })
     },
@@ -165,7 +165,7 @@ export function createPledgeRepository(db: D1Database): PledgeRepository {
           ) VALUES (?, ?, ?, ?, ?, 'pending', ?, ?, ?, 0, NULL, NULL, NULL, NULL, NULL,
             '0', '0', NULL, ?, ?, ?, ?)
           RETURNING *
-        `
+        `,
         )
         .bind(
           pledgeId,
@@ -179,7 +179,7 @@ export function createPledgeRepository(db: D1Database): PledgeRepository {
           input.isAnonymous ? 1 : 0,
           now,
           now,
-          now
+          now,
         )
         .first<Pledge>()
 
@@ -331,7 +331,7 @@ export function createPledgeRepository(db: D1Database): PledgeRepository {
           SELECT COALESCE(SUM(CAST(amount AS INTEGER)), 0) as total 
           FROM pledges 
           WHERE campaign_id = ? AND status IN ('confirmed', 'active')
-        `
+        `,
         )
         .bind(campaignId)
         .first<{ total: number }>()

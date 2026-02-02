@@ -13,6 +13,7 @@
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
+    "dev:web": "pnpm --filter @pledgebook/web dev",
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "format": "prettier --write \"**/*.{ts,tsx,vue,js,jsx,json,md,css,scss}\"",
@@ -21,7 +22,8 @@
     "test": "turbo run test",
     "test:unit": "turbo run test:unit",
     "test:e2e": "turbo run test:e2e",
-    "clean": "turbo run clean && rimraf node_modules .turbo",
+    "clean": "turbo run clean",
+    "clean:all": "turbo run clean && rimraf node_modules .turbo",
     "prepare": "husky"
   },
   "devDependencies": {

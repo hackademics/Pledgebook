@@ -7,5 +7,78 @@
     "light": "Light",
     "dark": "Dark",
     "system": "System"
+  },
+  "header": {
+    "search": "Search Pledgebook",
+    "connect_wallet": "Connect Wallet",
+    "trending": "Trending",
+    "new": "New"
+  },
+  "footer": {
+    "tagline": "The decentralized platform for transparent pledges and community accountability.",
+    "newsletter": {
+      "title": "Stay Updated",
+      "description": "Get the latest updates on new features and announcements.",
+      "placeholder": "Enter your email",
+      "success": "Thanks for subscribing!",
+      "error": "Something went wrong. Please try again."
+    },
+    "sections": {
+      "product": "Product",
+      "resources": "Resources",
+      "company": "Company"
+    },
+    "legal": {
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "cookies": "Cookie Policy"
+    },
+    "copyright": "© {year} Pledgebook. All rights reserved."
+  },
+  "hero": {
+    "badge": "Trusted by 10,000+ community members",
+    "title": "Make Pledges.",
+    "title_accent": "Build Trust.",
+    "description": "The decentralized platform where communities create transparent pledges, vouchers validate commitments, and everyone stays accountable.",
+    "cta_primary": "Explore Campaigns",
+    "cta_secondary": "How It Works"
+  },
+  "campaigns": {
+    "featured": "Featured Campaigns",
+    "view_all": "View all",
+    "vouchers": "{count} vouchers",
+    "days_left": "{count} days left"
+  },
+  "categories": {
+    "title": "Browse by Category",
+    "campaigns_count": "{count} campaigns"
+  },
+  "how_it_works": {
+    "title": "How Pledgebook Works",
+    "description": "A simple, transparent process to create accountability and build trust.",
+    "steps": {
+      "create": {
+        "title": "Create a Pledge",
+        "description": "Define your commitment with clear goals, timeline, and accountability measures."
+      },
+      "vouch": {
+        "title": "Get Vouchers",
+        "description": "Community members vouch for your pledge, adding credibility and trust."
+      },
+      "track": {
+        "title": "Track Progress",
+        "description": "Provide updates and evidence of your progress towards the pledge goal."
+      },
+      "reputation": {
+        "title": "Build Reputation",
+        "description": "Successful pledges build your reputation and unlock new opportunities."
+      }
+    }
+  },
+  "cta": {
+    "title": "Ready to make a pledge?",
+    "description": "Join thousands of community members building trust and accountability together.",
+    "connect_wallet": "Connect Wallet",
+    "start_campaign": "Start a Campaign"
   }
 }

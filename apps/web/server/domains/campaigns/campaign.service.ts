@@ -26,7 +26,7 @@ export interface CampaignService {
   }>
   getByCreator(
     creatorAddress: string,
-    query: ListCampaignsQuery
+    query: ListCampaignsQuery,
   ): Promise<{
     data: CampaignSummary[]
     meta: { page: number; limit: number; total: number; totalPages: number }
@@ -105,7 +105,7 @@ export function createCampaignService(repository: CampaignRepository): CampaignS
      */
     async getByCreator(
       creatorAddress: string,
-      query: ListCampaignsQuery
+      query: ListCampaignsQuery,
     ): Promise<{
       data: CampaignSummary[]
       meta: { page: number; limit: number; total: number; totalPages: number }
@@ -180,7 +180,7 @@ export function createCampaignService(repository: CampaignRepository): CampaignS
           throw createApiError(
             ApiErrorCode.VALIDATION_ERROR,
             'Start date must be before end date',
-            { field: 'startDate', value: input.startDate }
+            { field: 'startDate', value: input.startDate },
           )
         }
       }
@@ -196,7 +196,7 @@ export function createCampaignService(repository: CampaignRepository): CampaignS
     async update(
       id: string,
       creatorAddress: string,
-      input: UpdateCampaignInput
+      input: UpdateCampaignInput,
     ): Promise<CampaignResponse> {
       const campaign = await repository.findById(id)
 
@@ -211,7 +211,7 @@ export function createCampaignService(repository: CampaignRepository): CampaignS
       if (campaign.creator_address.toLowerCase() !== creatorAddress.toLowerCase()) {
         throw createApiError(
           ApiErrorCode.FORBIDDEN,
-          'You are not authorized to update this campaign'
+          'You are not authorized to update this campaign',
         )
       }
 
@@ -282,7 +282,7 @@ export function createCampaignService(repository: CampaignRepository): CampaignS
         throw createApiError(
           ApiErrorCode.VALIDATION_ERROR,
           `Invalid status transition from '${campaign.status}' to '${status}'`,
-          { currentStatus: campaign.status, requestedStatus: status }
+          { currentStatus: campaign.status, requestedStatus: status },
         )
       }
 
@@ -312,7 +312,7 @@ export function createCampaignService(repository: CampaignRepository): CampaignS
       if (campaign.creator_address.toLowerCase() !== creatorAddress.toLowerCase()) {
         throw createApiError(
           ApiErrorCode.FORBIDDEN,
-          'You are not authorized to delete this campaign'
+          'You are not authorized to delete this campaign',
         )
       }
 

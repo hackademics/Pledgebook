@@ -119,7 +119,7 @@ export const updateCategorySchema = z.object({
 const coerceNumber = (defaultValue: number) =>
   z.preprocess(
     (val) => (val === undefined || val === '' ? defaultValue : Number(val)),
-    z.number().int()
+    z.number().int(),
   )
 
 /**

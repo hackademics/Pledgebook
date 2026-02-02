@@ -133,7 +133,7 @@ export function createUserService(repository: UserRepository): UserService {
         throw createApiError(
           ApiErrorCode.CONFLICT,
           `User with address '${input.address}' already exists`,
-          { field: 'address', value: input.address }
+          { field: 'address', value: input.address },
         )
       }
 

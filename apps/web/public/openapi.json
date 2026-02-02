@@ -1,0 +1,89 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Pledgebook API",
+    "version": "0.1.0",
+    "description": "Public API for Pledgebook (Cloudflare Workers via Nuxt)."
+  },
+  "servers": [{ "url": "/" }],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer"
+      },
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "siwe_token"
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/siwe/nonce": {
+      "get": {
+        "summary": "Get SIWE nonce",
+        "responses": {
+          "200": { "description": "Nonce issued" }
+        }
+      }
+    },
+    "/api/auth/siwe/verify": {
+      "post": {
+        "summary": "Verify SIWE signature",
+        "responses": {
+          "200": { "description": "Session created" }
+        }
+      }
+    },
+    "/api/campaigns": {
+      "get": {
+        "summary": "List campaigns",
+        "responses": { "200": { "description": "Campaign list" } }
+      },
+      "post": {
+        "summary": "Create campaign",
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "responses": { "201": { "description": "Campaign created" } }
+      }
+    },
+    "/api/campaigns/{id}": {
+      "patch": {
+        "summary": "Update campaign",
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": { "200": { "description": "Campaign updated" } }
+      }
+    },
+    "/api/pledges": {
+      "post": {
+        "summary": "Create pledge",
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "responses": { "201": { "description": "Pledge created" } }
+      }
+    },
+    "/api/vouches": {
+      "post": {
+        "summary": "Create vouch",
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "responses": { "201": { "description": "Vouch created" } }
+      }
+    },
+    "/api/disputes": {
+      "post": {
+        "summary": "Create dispute",
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "responses": { "201": { "description": "Dispute created" } }
+      }
+    },
+    "/api/evidence": {
+      "post": {
+        "summary": "Upload evidence",
+        "security": [{ "bearerAuth": [] }, { "cookieAuth": [] }],
+        "responses": { "200": { "description": "Evidence uploaded" } }
+      }
+    }
+  }
+}

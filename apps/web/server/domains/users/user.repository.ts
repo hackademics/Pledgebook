@@ -123,7 +123,7 @@ export function createUserRepository(db: D1Database): UserRepository {
     async findTopByReputation(limit = 10): Promise<User[]> {
       const result = await db
         .prepare(
-          'SELECT * FROM users WHERE is_active = 1 AND is_banned = 0 ORDER BY reputation_score DESC LIMIT ?'
+          'SELECT * FROM users WHERE is_active = 1 AND is_banned = 0 ORDER BY reputation_score DESC LIMIT ?',
         )
         .bind(limit)
         .all<User>()
@@ -146,7 +146,7 @@ export function createUserRepository(db: D1Database): UserRepository {
             reputation_score, campaigns_created, pledges_made, total_pledged,
             is_active, is_banned, created_at, updated_at, last_login_at
           ) VALUES (?, 'user', ?, ?, ?, ?, 0, 0, 0, '0', 1, 0, ?, ?, ?)
-          RETURNING *`
+          RETURNING *`,
         )
         .bind(
           normalizedAddress,
@@ -156,7 +156,7 @@ export function createUserRepository(db: D1Database): UserRepository {
           input.avatarUrl ?? null,
           now,
           now,
-          now
+          now,
         )
         .first<User>()
 
@@ -172,7 +172,7 @@ export function createUserRepository(db: D1Database): UserRepository {
      */
     async update(
       address: string,
-      input: UpdateUserInput | AdminUpdateUserInput
+      input: UpdateUserInput | AdminUpdateUserInput,
     ): Promise<User | null> {
       const normalizedAddress = address.toLowerCase()
 
@@ -340,7 +340,7 @@ export function createUserRepository(db: D1Database): UserRepository {
 
       await db
         .prepare(
-          'UPDATE users SET campaigns_created = campaigns_created + 1, updated_at = ? WHERE address = ?'
+          'UPDATE users SET campaigns_created = campaigns_created + 1, updated_at = ? WHERE address = ?',
         )
         .bind(new Date().toISOString(), normalizedAddress)
         .run()
@@ -360,7 +360,7 @@ export function createUserRepository(db: D1Database): UserRepository {
             pledges_made = pledges_made + 1, 
             total_pledged = CAST((CAST(total_pledged AS INTEGER) + CAST(? AS INTEGER)) AS TEXT),
             updated_at = ? 
-          WHERE address = ?`
+          WHERE address = ?`,
         )
         .bind(amount, new Date().toISOString(), normalizedAddress)
         .run()
