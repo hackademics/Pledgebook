@@ -51,91 +51,90 @@
 
     <main class="campaign-main">
       <div class="container-app">
-        <!-- Hero Section: Title + Progress -->
-        <section class="campaign-hero">
-          <div class="campaign-hero__media">
-            <img
-              :src="campaign.coverImage"
-              :alt="campaign.title"
-            />
-            <div class="campaign-hero__overlay">
-              <div class="campaign-hero__category">
-                <Icon name="heroicons:heart" />
-                {{ campaign.tags[0] }}
-              </div>
-            </div>
-          </div>
-          <div class="campaign-hero__content">
-            <div class="campaign-hero__meta">
-              <span class="campaign-hero__creator">
-                <Icon name="heroicons:user-circle" />
-                {{ campaign.creator }}
-              </span>
-              <span class="campaign-hero__location">
-                <Icon name="heroicons:map-pin" />
-                {{ campaign.location }}
-              </span>
-            </div>
-            <h1 class="campaign-hero__title">
-              {{ campaign.title }}
-            </h1>
-            <p class="campaign-hero__subtitle">
-              {{ campaign.subtitle }}
-            </p>
-
-            <!-- Primary CTA -->
-            <div class="campaign-hero__cta">
-              <button
-                type="button"
-                class="btn btn--primary btn--lg"
-                @click="showPledgeModal = true"
-              >
-                <Icon name="heroicons:bolt" />
-                Pledge Now
-              </button>
-              <button
-                type="button"
-                class="btn btn--secondary"
-              >
-                <Icon name="heroicons:star" />
-                Watch
-              </button>
-            </div>
-
-            <!-- Progress Card -->
-            <div class="progress-card">
-              <div class="progress-card__bar">
-                <div
-                  class="progress-card__fill"
-                  :style="{ width: `${campaign.progress}%` }"
-                ></div>
-              </div>
-              <div class="progress-card__stats">
-                <div class="progress-card__stat progress-card__stat--primary">
-                  <span class="progress-card__value">{{ campaign.pledged }}</span>
-                  <span class="progress-card__label">of {{ campaign.goal }}</span>
-                </div>
-                <div class="progress-card__stat">
-                  <span class="progress-card__value">{{ campaign.progress }}%</span>
-                  <span class="progress-card__label">funded</span>
-                </div>
-                <div class="progress-card__stat">
-                  <span class="progress-card__value">{{ campaign.pledgers }}</span>
-                  <span class="progress-card__label">pledgers</span>
-                </div>
-                <div class="progress-card__stat">
-                  <span class="progress-card__value">{{ campaign.vouchers }}</span>
-                  <span class="progress-card__label">vouchers</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
         <!-- Main Content Grid -->
         <div class="campaign-grid">
           <!-- Left Column: Core Content -->
           <div class="campaign-grid__main">
+            <!-- Hero Section: Title + Progress -->
+            <section class="campaign-hero">
+              <div class="campaign-hero__media">
+                <img
+                  :src="campaign.coverImage"
+                  :alt="campaign.title"
+                />
+                <div class="campaign-hero__overlay">
+                  <div class="campaign-hero__category">
+                    <Icon name="heroicons:heart" />
+                    {{ campaign.tags[0] }}
+                  </div>
+                </div>
+              </div>
+              <div class="campaign-hero__content">
+                <div class="campaign-hero__meta">
+                  <span class="campaign-hero__creator">
+                    <Icon name="heroicons:user-circle" />
+                    {{ campaign.creator }}
+                  </span>
+                  <span class="campaign-hero__location">
+                    <Icon name="heroicons:map-pin" />
+                    {{ campaign.location }}
+                  </span>
+                </div>
+                <h1 class="campaign-hero__title">
+                  {{ campaign.title }}
+                </h1>
+                <p class="campaign-hero__subtitle">
+                  {{ campaign.subtitle }}
+                </p>
+
+                <!-- Primary CTA -->
+                <div class="campaign-hero__cta">
+                  <button
+                    type="button"
+                    class="btn btn--primary btn--lg"
+                    @click="showPledgeModal = true"
+                  >
+                    <Icon name="heroicons:bolt" />
+                    Pledge Now
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn--secondary"
+                  >
+                    <Icon name="heroicons:star" />
+                    Watch
+                  </button>
+                </div>
+
+                <!-- Progress Card -->
+                <div class="progress-card">
+                  <div class="progress-card__bar">
+                    <div
+                      class="progress-card__fill"
+                      :style="{ width: `${campaign.progress}%` }"
+                    ></div>
+                  </div>
+                  <div class="progress-card__stats">
+                    <div class="progress-card__stat progress-card__stat--primary">
+                      <span class="progress-card__value">{{ campaign.pledged }}</span>
+                      <span class="progress-card__label">of {{ campaign.goal }}</span>
+                    </div>
+                    <div class="progress-card__stat">
+                      <span class="progress-card__value">{{ campaign.progress }}%</span>
+                      <span class="progress-card__label">funded</span>
+                    </div>
+                    <div class="progress-card__stat">
+                      <span class="progress-card__value">{{ campaign.pledgers }}</span>
+                      <span class="progress-card__label">pledgers</span>
+                    </div>
+                    <div class="progress-card__stat">
+                      <span class="progress-card__value">{{ campaign.vouchers }}</span>
+                      <span class="progress-card__label">vouchers</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
             <!-- The Pledge (What) -->
             <section class="card">
               <div class="card__header">
@@ -245,17 +244,18 @@
                   <h2 class="card__title">Top Pledgers</h2>
                   <p class="card__subtitle">{{ campaign.pledgers }} supporters</p>
                 </div>
-                <button
-                  type="button"
+                <NuxtLink
+                  :to="`/@${route.params.slug}/pledges`"
                   class="btn btn--ghost btn--sm"
                 >
                   View all
-                </button>
+                </NuxtLink>
               </div>
               <div class="pledger-list">
-                <div
+                <NuxtLink
                   v-for="(donor, index) in donors"
                   :key="donor.id"
+                  :to="`/@${route.params.slug}/pledges/${donor.id}`"
                   class="pledger-item"
                 >
                   <span class="pledger-item__rank">{{ index + 1 }}</span>
@@ -270,13 +270,66 @@
                     <span class="pledger-item__value">{{ donor.amount }}</span>
                     <span class="pledger-item__time">{{ donor.time }}</span>
                   </div>
-                </div>
+                  <span class="pledger-item__chevron">
+                    <Icon name="heroicons:chevron-right" />
+                  </span>
+                </NuxtLink>
               </div>
             </section>
           </div>
 
           <!-- Right Column: Sidebar -->
           <aside class="campaign-grid__sidebar">
+            <!-- Pledge CTA Card -->
+            <div class="sidebar-card sidebar-card--pledge">
+              <div class="pledge-cta__header">
+                <div class="pledge-cta__amount">
+                  <span class="pledge-cta__value">{{ campaign.pledged }}</span>
+                  <span class="pledge-cta__goal">of {{ campaign.goal }} goal</span>
+                </div>
+                <span class="pledge-cta__percent">{{ campaign.progress }}%</span>
+              </div>
+              <div class="pledge-cta__bar">
+                <div
+                  class="pledge-cta__fill"
+                  :style="{ width: `${campaign.progress}%` }"
+                ></div>
+              </div>
+              <div class="pledge-cta__meta">
+                <span class="pledge-cta__stat">
+                  <Icon name="heroicons:users" />
+                  {{ campaign.pledgers }} pledgers
+                </span>
+                <span class="pledge-cta__stat">
+                  <Icon name="heroicons:clock" />
+                  {{ campaign.daysLeft }}d left
+                </span>
+              </div>
+              <button
+                type="button"
+                class="btn btn--primary btn--lg btn--full"
+                @click="showPledgeModal = true"
+              >
+                <Icon name="heroicons:bolt" />
+                Make a Pledge
+              </button>
+              <p class="pledge-cta__note">
+                <Icon name="heroicons:shield-check" />
+                Funds held in escrow until verified
+              </p>
+              <a
+                v-if="campaign.escrowAddress"
+                :href="`https://basescan.org/address/${campaign.escrowAddress}`"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="pledge-cta__escrow"
+              >
+                <Icon name="heroicons:lock-closed" />
+                <span>View Escrow Contract</span>
+                <Icon name="heroicons:arrow-top-right-on-square" />
+              </a>
+            </div>
+
             <!-- Quick Stats -->
             <div class="sidebar-card">
               <h3 class="sidebar-card__title">Campaign Snapshot</h3>
@@ -407,6 +460,7 @@ const campaign = {
   verificationState: 'Baseline captured · CRE monitoring',
   proof: 'Weekly test reports',
   privacy: 'ZKP enabled',
+  escrowAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f8fE21',
   pledgeStatement:
     'We pledge to install 120 solar-powered filtration units by Sep 30, 2026 and will verify completion using a consensus prompt with independent water-quality data sources.',
   promptHash: '0x9a3f5c8b7d1e4b6c2f0a6e3d9b8c7f1a4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9',
@@ -438,7 +492,7 @@ const campaign = {
 
 const donors = [
   {
-    id: 'donor-1',
+    id: 'pledge-1',
     name: 'Serena W.',
     initials: 'SW',
     amount: '$18,200',
@@ -446,7 +500,7 @@ const donors = [
     note: 'Matched pledge for school installation.',
   },
   {
-    id: 'donor-2',
+    id: 'pledge-2',
     name: 'Atlas Capital',
     initials: 'AC',
     amount: '$12,500',
@@ -454,7 +508,7 @@ const donors = [
     note: 'Committed to phase-two expansion.',
   },
   {
-    id: 'donor-3',
+    id: 'pledge-4',
     name: 'Nia R.',
     initials: 'NR',
     amount: '$6,900',
@@ -462,7 +516,7 @@ const donors = [
     note: 'Funding equipment maintenance.',
   },
   {
-    id: 'donor-4',
+    id: 'pledge-5',
     name: 'Kaito Labs',
     initials: 'KL',
     amount: '$5,300',
@@ -470,7 +524,7 @@ const donors = [
     note: 'Supporting real-time telemetry.',
   },
   {
-    id: 'donor-5',
+    id: 'pledge-6',
     name: 'Liam C.',
     initials: 'LC',
     amount: '$4,800',
@@ -609,26 +663,27 @@ const vouchers = [
 }
 
 /* -----------------------------------------------------------------------------
-   Hero Section - Image + Key Info
+   Hero Section - Image + Key Info (inside main column)
    ----------------------------------------------------------------------------- */
 
 .campaign-hero {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.25rem;
-  margin-bottom: 1.5rem;
+  gap: 1rem;
+  margin-bottom: 1rem;
 }
 
 @media (min-width: 768px) {
   .campaign-hero {
-    grid-template-columns: 280px 1fr;
-    gap: 1.5rem;
+    grid-template-columns: 200px 1fr;
+    gap: 1rem;
+    align-items: start;
   }
 }
 
 @media (min-width: 1024px) {
   .campaign-hero {
-    grid-template-columns: 320px 1fr;
+    grid-template-columns: 220px 1fr;
   }
 }
 
@@ -643,8 +698,8 @@ const vouchers = [
 @media (min-width: 768px) {
   .campaign-hero__media {
     aspect-ratio: 1;
-    height: 100%;
-    max-height: 240px;
+    height: auto;
+    max-height: 200px;
   }
 }
 
@@ -820,6 +875,7 @@ const vouchers = [
   .campaign-grid {
     grid-template-columns: minmax(0, 1fr) 300px;
     gap: 1.5rem;
+    align-items: start;
   }
 }
 
@@ -833,6 +889,8 @@ const vouchers = [
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  position: sticky;
+  top: calc(var(--header-total-height) + 3.5rem);
 }
 
 /* -----------------------------------------------------------------------------
@@ -1110,12 +1168,18 @@ const vouchers = [
 
 .pledger-item {
   display: grid;
-  grid-template-columns: 1.25rem 2.25rem 1fr auto;
+  grid-template-columns: 1.25rem 2.25rem 1fr auto auto;
   gap: 0.625rem;
   align-items: center;
   padding: 0.5rem 0.625rem;
   background-color: var(--surface-secondary);
   border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: background-color var(--transition-fast);
+}
+
+.pledger-item:hover {
+  background-color: var(--surface-hover);
 }
 
 .pledger-item__rank {
@@ -1180,6 +1244,23 @@ const vouchers = [
   color: var(--text-tertiary);
 }
 
+.pledger-item__chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  transition: color var(--transition-fast);
+}
+
+.pledger-item__chevron .icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.pledger-item:hover .pledger-item__chevron {
+  color: var(--text-secondary);
+}
+
 /* -----------------------------------------------------------------------------
    Sidebar Cards
    ----------------------------------------------------------------------------- */
@@ -1219,6 +1300,141 @@ const vouchers = [
 
 .sidebar-card--cta .sidebar-card__title {
   margin-bottom: 0.25rem;
+}
+
+/* Pledge CTA Card */
+.sidebar-card--pledge {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--interactive-primary) 8%, var(--bg-primary)),
+    var(--bg-primary)
+  );
+  border-color: color-mix(in oklch, var(--interactive-primary) 25%, var(--border-primary));
+}
+
+.pledge-cta__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.625rem;
+}
+
+.pledge-cta__amount {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.pledge-cta__value {
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--interactive-primary);
+  line-height: 1.1;
+}
+
+.pledge-cta__goal {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.pledge-cta__percent {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  background-color: var(--surface-secondary);
+  padding: 0.25rem 0.5rem;
+  border-radius: var(--radius-md);
+}
+
+.pledge-cta__bar {
+  height: 6px;
+  background-color: var(--surface-secondary);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.pledge-cta__fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--interactive-primary), var(--interactive-primary-hover));
+  border-radius: var(--radius-full);
+  transition: width 0.4s ease;
+}
+
+.pledge-cta__meta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.875rem;
+}
+
+.pledge-cta__stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.pledge-cta__stat .icon {
+  width: 0.875rem;
+  height: 0.875rem;
+  color: var(--text-tertiary);
+}
+
+.pledge-cta__note {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin: 0.75rem 0 0;
+  font-size: var(--text-2xs);
+  color: var(--text-tertiary);
+}
+
+.pledge-cta__note .icon {
+  width: 0.75rem;
+  height: 0.75rem;
+  color: var(--color-success-500);
+}
+
+.pledge-cta__escrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  margin-top: 0.625rem;
+  padding: 0.5rem 0.75rem;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-secondary);
+  background-color: var(--surface-secondary);
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.pledge-cta__escrow .icon {
+  width: 0.875rem;
+  height: 0.875rem;
+}
+
+.pledge-cta__escrow .icon:first-child {
+  color: var(--color-success-600);
+}
+
+.pledge-cta__escrow .icon:last-child {
+  color: var(--text-tertiary);
+}
+
+.pledge-cta__escrow:hover {
+  color: var(--interactive-primary);
+  background-color: color-mix(in oklch, var(--interactive-primary) 8%, transparent);
+}
+
+.pledge-cta__escrow:hover .icon:last-child {
+  color: var(--interactive-primary);
 }
 
 /* Snapshot Grid */
