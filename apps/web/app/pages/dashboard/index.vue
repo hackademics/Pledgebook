@@ -371,6 +371,12 @@
                     <div class="dashboard-split-header">
                       <Icon name="heroicons:hand-thumb-up" />
                       <span>Recent Vouches</span>
+                      <NuxtLink
+                        to="/my-vouches"
+                        class="dashboard-split-link"
+                      >
+                        View all
+                      </NuxtLink>
                     </div>
                     <div
                       v-if="vouchersPending"
@@ -386,18 +392,25 @@
                       <li
                         v-for="voucher in vouchers"
                         :key="voucher.id"
-                        class="dashboard-list-item"
+                        class="dashboard-list-item dashboard-list-item--clickable"
                       >
-                        <div class="dashboard-list-content">
-                          <p class="dashboard-list-title">{{ formatAmount(voucher.amount) }} wei</p>
-                          <p class="dashboard-list-meta">{{ formatDate(voucher.vouchedAt) }}</p>
-                        </div>
-                        <span
-                          class="status-pill status-pill--sm"
-                          :class="`status-pill--${voucher.status}`"
+                        <NuxtLink
+                          :to="`/vouchers/${voucher.id}`"
+                          class="dashboard-list-link"
                         >
-                          {{ voucher.status }}
-                        </span>
+                          <div class="dashboard-list-content">
+                            <p class="dashboard-list-title">
+                              {{ formatAmount(voucher.amount) }} wei
+                            </p>
+                            <p class="dashboard-list-meta">{{ formatDate(voucher.vouchedAt) }}</p>
+                          </div>
+                          <span
+                            class="status-pill status-pill--sm"
+                            :class="`status-pill--${voucher.status}`"
+                          >
+                            {{ voucher.status }}
+                          </span>
+                        </NuxtLink>
                       </li>
                     </ul>
                     <div
@@ -418,6 +431,12 @@
                     <h2 class="dashboard-panel-title">Disputes & Challenges</h2>
                     <p class="dashboard-panel-description">Monitor status and required actions</p>
                   </div>
+                  <NuxtLink
+                    to="/my-disputes"
+                    class="btn btn-secondary btn-sm"
+                  >
+                    View all
+                  </NuxtLink>
                 </div>
 
                 <div
@@ -435,27 +454,32 @@
                   <li
                     v-for="dispute in disputes"
                     :key="dispute.id"
-                    class="dashboard-list-item"
+                    class="dashboard-list-item dashboard-list-item--clickable"
                   >
-                    <div class="dashboard-list-content">
-                      <p class="dashboard-list-title">
-                        {{ capitalize(dispute.disputeType) }} dispute
-                      </p>
-                      <p class="dashboard-list-meta">
-                        {{ truncateText(dispute.reason, 90) }}
-                      </p>
-                    </div>
-                    <div class="dashboard-list-aside">
-                      <span
-                        class="status-pill"
-                        :class="`status-pill--${dispute.status}`"
-                      >
-                        {{ dispute.status }}
-                      </span>
-                      <span class="dashboard-list-date">
-                        {{ formatDate(dispute.disputedAt) }}
-                      </span>
-                    </div>
+                    <NuxtLink
+                      :to="`/disputes/${dispute.id}`"
+                      class="dashboard-list-link"
+                    >
+                      <div class="dashboard-list-content">
+                        <p class="dashboard-list-title">
+                          {{ capitalize(dispute.disputeType) }} dispute
+                        </p>
+                        <p class="dashboard-list-meta">
+                          {{ truncateText(dispute.reason, 90) }}
+                        </p>
+                      </div>
+                      <div class="dashboard-list-aside">
+                        <span
+                          class="status-pill"
+                          :class="`status-pill--${dispute.status}`"
+                        >
+                          {{ dispute.status }}
+                        </span>
+                        <span class="dashboard-list-date">
+                          {{ formatDate(dispute.disputedAt) }}
+                        </span>
+                      </div>
+                    </NuxtLink>
                   </li>
                 </ul>
 
@@ -1428,6 +1452,42 @@ a.dashboard-list-title:hover {
   width: 1rem;
   height: 1rem;
   color: var(--text-tertiary);
+}
+
+.dashboard-split-link {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  font-weight: var(--font-weight-medium);
+  color: var(--interactive-primary);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+.dashboard-split-link:hover {
+  color: var(--interactive-primary-hover);
+  text-decoration: underline;
+}
+
+.dashboard-list-item--clickable {
+  padding: 0;
+}
+
+.dashboard-list-item--clickable:hover {
+  background-color: var(--surface-secondary);
+}
+
+.dashboard-list-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.75rem 0;
+  text-decoration: none;
+  color: inherit;
+}
+
+.dashboard-list-link:hover .dashboard-list-title {
+  color: var(--interactive-primary);
 }
 
 /* =============================================================================

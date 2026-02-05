@@ -191,151 +191,178 @@
                 </button>
               </form>
 
-              <form
-                class="action-card"
-                @submit.prevent="submitVoucher"
-              >
-                <h3>Vouch</h3>
-                <label>
-                  Amount (wei)
-                  <input
-                    v-model="voucherForm.amount"
-                    type="text"
-                    required
-                  />
-                </label>
-                <label>
-                  Stake Tx Hash
-                  <input
-                    v-model="voucherForm.stakeTxHash"
-                    type="text"
-                    required
-                  />
-                </label>
-                <label>
-                  Endorsement
-                  <textarea
-                    v-model="voucherForm.endorsementMessage"
-                    rows="2"
-                  ></textarea>
-                </label>
-                <label>
-                  Expiration (optional)
-                  <input
-                    v-model="voucherForm.expiresAt"
-                    type="datetime-local"
-                  />
-                </label>
+              <div class="action-card action-card--modal">
+                <h3>
+                  <Icon name="heroicons:shield-check" />
+                  Vouch for Campaign
+                </h3>
+                <p class="action-card__description">
+                  Stake your reputation to endorse this campaign's legitimacy.
+                </p>
                 <button
-                  type="submit"
-                  class="btn btn--primary"
-                  :disabled="voucherSubmitting"
+                  type="button"
+                  class="btn btn--success"
+                  :disabled="!hasToken"
+                  @click="showVouchModal = true"
                 >
-                  {{ voucherSubmitting ? 'Submitting...' : 'Submit Voucher' }}
+                  <Icon name="heroicons:hand-thumb-up" />
+                  Vouch Now
                 </button>
-              </form>
+              </div>
 
-              <form
-                class="action-card"
-                @submit.prevent="submitDispute"
-              >
-                <h3>Dispute</h3>
-                <label>
-                  Amount (wei)
-                  <input
-                    v-model="disputeForm.amount"
-                    type="text"
-                    required
-                  />
-                </label>
-                <label>
-                  Stake Tx Hash
-                  <input
-                    v-model="disputeForm.stakeTxHash"
-                    type="text"
-                    required
-                  />
-                </label>
-                <label>
-                  Reason
-                  <textarea
-                    v-model="disputeForm.reason"
-                    rows="3"
-                    required
-                  ></textarea>
-                </label>
-                <label>
-                  Dispute Type
-                  <select v-model="disputeForm.disputeType">
-                    <option value="general">General</option>
-                    <option value="fraud">Fraud</option>
-                    <option value="misrepresentation">Misrepresentation</option>
-                    <option value="rule_violation">Rule Violation</option>
-                    <option value="verification_failure">Verification Failure</option>
-                  </select>
-                </label>
-                <label>
-                  Evidence URL or Note (optional)
-                  <input
-                    v-model="disputeForm.evidence"
-                    type="text"
-                  />
-                </label>
+              <div class="action-card action-card--modal">
+                <h3>
+                  <Icon name="heroicons:flag" />
+                  File a Dispute
+                </h3>
+                <p class="action-card__description">
+                  Report concerns about this campaign's legitimacy or rule violations.
+                </p>
                 <button
-                  type="submit"
-                  class="btn btn--primary"
-                  :disabled="disputeSubmitting"
+                  type="button"
+                  class="btn btn--danger"
+                  :disabled="!hasToken"
+                  @click="showDisputeModal = true"
                 >
-                  {{ disputeSubmitting ? 'Submitting...' : 'Submit Dispute' }}
+                  <Icon name="heroicons:exclamation-triangle" />
+                  File Dispute
                 </button>
-              </form>
+              </div>
             </div>
           </section>
 
           <section class="detail-card">
-            <h2>Recent Activity</h2>
+            <div class="detail-card__header">
+              <h2>Campaign Activity</h2>
+            </div>
             <div class="activity-grid">
-              <div>
-                <h3>Pledges</h3>
-                <ul>
+              <div class="activity-column">
+                <div class="activity-column__header">
+                  <Icon name="heroicons:banknotes" />
+                  <h3>Pledges</h3>
+                  <span class="activity-count">{{ pledges.length }}</span>
+                </div>
+                <ul v-if="pledges.length">
                   <li
                     v-for="pledge in pledges"
                     :key="pledge.id"
                   >
-                    <span>{{ pledge.amount }} wei</span>
-                    <span>{{ formatDate(pledge.pledgedAt) }}</span>
+                    <span class="activity-amount">{{ formatAmount(pledge.amount) }} wei</span>
+                    <span class="activity-date">{{ formatDate(pledge.pledgedAt) }}</span>
                   </li>
                 </ul>
+                <p
+                  v-else
+                  class="activity-empty"
+                >
+                  No pledges yet
+                </p>
               </div>
-              <div>
-                <h3>Vouches</h3>
-                <ul>
+
+              <div class="activity-column">
+                <div class="activity-column__header">
+                  <Icon name="heroicons:shield-check" />
+                  <h3>Vouches</h3>
+                  <span class="activity-count">{{ vouchers.length }}</span>
+                  <NuxtLink
+                    v-if="vouchers.length"
+                    :to="`/campaigns/${resolvedCampaignId}/vouchers`"
+                    class="activity-link"
+                  >
+                    View all
+                  </NuxtLink>
+                </div>
+                <ul v-if="vouchers.length">
                   <li
                     v-for="voucher in vouchers"
                     :key="voucher.id"
                   >
-                    <span>{{ voucher.amount }} wei</span>
-                    <span>{{ formatDate(voucher.vouchedAt) }}</span>
+                    <NuxtLink
+                      :to="`/vouchers/${voucher.id}`"
+                      class="activity-item-link"
+                    >
+                      <span class="activity-amount">{{ formatAmount(voucher.amount) }} wei</span>
+                      <span
+                        class="status-pill status-pill--sm"
+                        :class="`status-pill--${voucher.status}`"
+                      >
+                        {{ voucher.status }}
+                      </span>
+                    </NuxtLink>
                   </li>
                 </ul>
+                <p
+                  v-else
+                  class="activity-empty"
+                >
+                  No vouches yet
+                </p>
               </div>
-              <div>
-                <h3>Disputes</h3>
-                <ul>
+
+              <div class="activity-column">
+                <div class="activity-column__header">
+                  <Icon name="heroicons:flag" />
+                  <h3>Disputes</h3>
+                  <span class="activity-count">{{ disputes.length }}</span>
+                  <NuxtLink
+                    v-if="disputes.length"
+                    :to="`/campaigns/${resolvedCampaignId}/disputes`"
+                    class="activity-link"
+                  >
+                    View all
+                  </NuxtLink>
+                </div>
+                <ul v-if="disputes.length">
                   <li
                     v-for="dispute in disputes"
                     :key="dispute.id"
                   >
-                    <span>{{ dispute.disputeType }}</span>
-                    <span>{{ formatDate(dispute.disputedAt) }}</span>
+                    <NuxtLink
+                      :to="`/disputes/${dispute.id}`"
+                      class="activity-item-link"
+                    >
+                      <span class="activity-type">{{ dispute.disputeType }}</span>
+                      <span
+                        class="status-pill status-pill--sm"
+                        :class="`status-pill--${dispute.status}`"
+                      >
+                        {{ dispute.status }}
+                      </span>
+                    </NuxtLink>
                   </li>
                 </ul>
+                <p
+                  v-else
+                  class="activity-empty"
+                >
+                  No disputes filed
+                </p>
               </div>
             </div>
           </section>
         </div>
       </div>
     </main>
+
+    <!-- Vouch Modal -->
+    <VouchModal
+      v-if="campaign"
+      :show="showVouchModal"
+      :campaign-id="resolvedCampaignId"
+      :campaign-name="campaign.name"
+      @close="showVouchModal = false"
+      @success="handleVouchSuccess"
+    />
+
+    <!-- Dispute Modal -->
+    <DisputeModal
+      v-if="campaign"
+      :show="showDisputeModal"
+      :campaign-id="resolvedCampaignId"
+      :campaign-name="campaign.name"
+      @close="showDisputeModal = false"
+      @success="handleDisputeSuccess"
+    />
   </div>
 </template>
 
@@ -343,6 +370,8 @@
 import { computed, ref } from 'vue'
 import TurnstileWidget from '../../components/common/TurnstileWidget.vue'
 import EvidenceUploadCard from '../../components/evidence/EvidenceUploadCard.vue'
+import VouchModal from '../../components/VouchModal.vue'
+import DisputeModal from '../../components/DisputeModal.vue'
 
 const route = useRoute()
 const toast = useToast()
@@ -352,22 +381,27 @@ const { token: turnstileToken, hasToken, setToken, clearToken } = useTurnstileTo
 const turnstileRef = ref<InstanceType<typeof TurnstileWidget> | null>(null)
 const campaignId = computed(() => String(route.params.id || ''))
 
+// Modal states
+const showVouchModal = ref(false)
+const showDisputeModal = ref(false)
+
 const {
   data: campaignResponse,
   pending: campaignPending,
   error: campaignError,
+  refresh: refreshCampaign,
 } = useFetch(() => `/api/campaigns/${campaignId.value}`)
 
 const campaign = computed(() => campaignResponse.value?.data)
 const resolvedCampaignId = computed(() => campaign.value?.id || campaignId.value)
 
-const { data: pledgesResponse } = useFetch(
+const { data: pledgesResponse, refresh: refreshPledges } = useFetch(
   () => `/api/campaigns/${resolvedCampaignId.value}/pledges?limit=5`,
 )
-const { data: vouchersResponse } = useFetch(
+const { data: vouchersResponse, refresh: refreshVouchers } = useFetch(
   () => `/api/campaigns/${resolvedCampaignId.value}/vouchers?limit=5`,
 )
-const { data: disputesResponse } = useFetch(
+const { data: disputesResponse, refresh: refreshDisputes } = useFetch(
   () => `/api/campaigns/${resolvedCampaignId.value}/disputers?limit=5`,
 )
 
@@ -381,23 +415,8 @@ const pledgeForm = ref({
   message: '',
   isAnonymous: false,
 })
-const voucherForm = ref({
-  amount: '',
-  stakeTxHash: '',
-  endorsementMessage: '',
-  expiresAt: '',
-})
-const disputeForm = ref({
-  amount: '',
-  stakeTxHash: '',
-  reason: '',
-  disputeType: 'general',
-  evidence: '',
-})
 
 const pledgeSubmitting = ref(false)
-const voucherSubmitting = ref(false)
-const disputeSubmitting = ref(false)
 
 function handleTurnstileVerified(token: string): void {
   setToken(token)
@@ -480,6 +499,7 @@ async function submitPledge(): Promise<void> {
     pledgeForm.value = { amount: '', txHash: '', message: '', isAnonymous: false }
     turnstileRef.value?.reset()
     clearToken()
+    refreshPledges()
   } catch (error) {
     toast.add({
       title: 'Pledge Failed',
@@ -492,101 +512,20 @@ async function submitPledge(): Promise<void> {
   }
 }
 
-async function submitVoucher(): Promise<void> {
-  if (!ensureWalletAndToken()) return
-  voucherSubmitting.value = true
-
-  try {
-    await $fetch('/api/vouchers', {
-      method: 'POST',
-      headers: buildHeaders(),
-      body: {
-        campaignId: resolvedCampaignId.value,
-        amount: voucherForm.value.amount,
-        stakeTxHash: voucherForm.value.stakeTxHash,
-        endorsementMessage: voucherForm.value.endorsementMessage || null,
-        expiresAt: voucherForm.value.expiresAt
-          ? new Date(voucherForm.value.expiresAt).toISOString()
-          : null,
-      },
-    })
-
-    toast.add({
-      title: 'Voucher Submitted',
-      description: 'Your endorsement has been recorded.',
-      icon: 'i-heroicons-check-circle',
-      color: 'success',
-    })
-
-    voucherForm.value = { amount: '', stakeTxHash: '', endorsementMessage: '', expiresAt: '' }
-    turnstileRef.value?.reset()
-    clearToken()
-  } catch (error) {
-    toast.add({
-      title: 'Voucher Failed',
-      description: error instanceof Error ? error.message : 'Please try again.',
-      icon: 'i-heroicons-exclamation-circle',
-      color: 'error',
-    })
-  } finally {
-    voucherSubmitting.value = false
-  }
+function handleVouchSuccess(): void {
+  showVouchModal.value = false
+  refreshVouchers()
+  refreshCampaign()
+  turnstileRef.value?.reset()
+  clearToken()
 }
 
-async function submitDispute(): Promise<void> {
-  if (!ensureWalletAndToken()) return
-  disputeSubmitting.value = true
-
-  try {
-    const evidence = disputeForm.value.evidence
-      ? [
-          {
-            type: disputeForm.value.evidence.startsWith('http') ? 'url' : 'text',
-            content: disputeForm.value.evidence,
-            submittedAt: new Date().toISOString(),
-          },
-        ]
-      : []
-
-    await $fetch('/api/disputers', {
-      method: 'POST',
-      headers: buildHeaders(),
-      body: {
-        campaignId: resolvedCampaignId.value,
-        amount: disputeForm.value.amount,
-        stakeTxHash: disputeForm.value.stakeTxHash,
-        reason: disputeForm.value.reason,
-        disputeType: disputeForm.value.disputeType,
-        evidence,
-      },
-    })
-
-    toast.add({
-      title: 'Dispute Submitted',
-      description: 'Your dispute has been recorded.',
-      icon: 'i-heroicons-check-circle',
-      color: 'success',
-    })
-
-    disputeForm.value = {
-      amount: '',
-      stakeTxHash: '',
-      reason: '',
-      disputeType: 'general',
-      evidence: '',
-    }
-    turnstileRef.value?.reset()
-    clearToken()
-  } catch (error) {
-    toast.add({
-      title: 'Dispute Failed',
-      description: error instanceof Error ? error.message : 'Please try again.',
-      icon: 'i-heroicons-exclamation-circle',
-      color: 'error',
-    })
-  } finally {
-    disputeSubmitting.value = false
-  }
+function handleDisputeSuccess(): void {
+  showDisputeModal.value = false
+  refreshDisputes()
+  refreshCampaign()
+  turnstileRef.value?.reset()
+  clearToken()
 }
 
 function formatAmount(value: string): string {
@@ -698,6 +637,82 @@ function formatJson(value: Record<string, unknown>): string {
   color: var(--text-secondary);
 }
 
+.action-card--modal {
+  text-align: center;
+  align-items: center;
+}
+
+.action-card--modal h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+}
+
+.action-card--modal h3 .icon {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.action-card__description {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  margin: 0;
+}
+
+.btn--success {
+  background-color: var(--color-success-500);
+  color: var(--text-inverse);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  border: none;
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+  transition: background-color var(--transition-fast);
+}
+
+.btn--success:hover:not(:disabled) {
+  background-color: var(--color-success-600);
+}
+
+.btn--success:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--danger {
+  background-color: var(--color-error-500);
+  color: var(--text-inverse);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-lg);
+  border: none;
+  cursor: pointer;
+  font-weight: var(--font-weight-medium);
+  transition: background-color var(--transition-fast);
+}
+
+.btn--danger:hover:not(:disabled) {
+  background-color: var(--color-error-600);
+}
+
+.btn--danger:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn--success .icon,
+.btn--danger .icon {
+  width: 1rem;
+  height: 1rem;
+}
+
 .action-card input,
 .action-card textarea,
 .action-card select {
@@ -721,6 +736,52 @@ function formatJson(value: Record<string, unknown>): string {
   font-size: var(--text-xs);
 }
 
+.activity-column {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.activity-column__header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-secondary);
+}
+
+.activity-column__header .icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--text-tertiary);
+}
+
+.activity-column__header h3 {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.activity-count {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  background-color: var(--surface-secondary);
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full);
+}
+
+.activity-link {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--interactive-primary);
+  text-decoration: none;
+}
+
+.activity-link:hover {
+  text-decoration: underline;
+}
+
 .activity-grid ul {
   list-style: none;
   padding: 0;
@@ -737,6 +798,55 @@ function formatJson(value: Record<string, unknown>): string {
   color: var(--text-secondary);
 }
 
+.activity-item-link {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  margin: -0.375rem -0.5rem;
+  border-radius: var(--radius-md);
+  text-decoration: none;
+  color: inherit;
+  transition: background-color var(--transition-fast);
+}
+
+.activity-item-link:hover {
+  background-color: var(--surface-secondary);
+}
+
+.activity-item-link:hover .activity-amount,
+.activity-item-link:hover .activity-type {
+  color: var(--interactive-primary);
+}
+
+.activity-amount {
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+}
+
+.activity-type {
+  text-transform: capitalize;
+  color: var(--text-primary);
+}
+
+.activity-date {
+  color: var(--text-tertiary);
+}
+
+.activity-empty {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  font-style: italic;
+  margin: 0;
+  padding: 0.5rem 0;
+}
+
+.detail-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -746,6 +856,33 @@ function formatJson(value: Record<string, unknown>): string {
   text-transform: capitalize;
   background-color: var(--surface-secondary);
   color: var(--text-secondary);
+}
+
+.status-pill--sm {
+  padding: 0.125rem 0.5rem;
+  font-size: 0.625rem;
+}
+
+.status-pill--active {
+  background-color: color-mix(in oklch, var(--color-success-500) 15%, transparent);
+  color: var(--color-success-600);
+}
+
+.status-pill--pending {
+  background-color: color-mix(in oklch, var(--color-warning-500) 15%, transparent);
+  color: var(--color-warning-600);
+}
+
+.status-pill--slashed,
+.status-pill--rejected {
+  background-color: color-mix(in oklch, var(--color-error-500) 15%, transparent);
+  color: var(--color-error-600);
+}
+
+.status-pill--released,
+.status-pill--upheld {
+  background-color: color-mix(in oklch, var(--interactive-primary) 15%, transparent);
+  color: var(--interactive-primary);
 }
 
 .loading-state,
