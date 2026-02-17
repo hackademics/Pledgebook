@@ -326,12 +326,15 @@ import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
 import type { DisputerFormState, DisputeType, EvidenceItem } from '../types/disputer'
 import { parseDisputerAmountToWei, getDisputeTypeConfig } from '../types/disputer'
 import { useDisputers } from '../composables/useDisputers'
+import { ERC20_ABI, PLEDGE_ESCROW_ABI, getUsdcAddress } from '~/config/contracts'
+import type { Address } from 'viem'
 
 interface Props {
   visible: boolean
   campaignId: string
   campaignTitle: string
   campaignSlug: string
+  escrowAddress?: string
 }
 
 const props = defineProps<Props>()
@@ -341,6 +344,15 @@ const emit = defineEmits<{
   success: [disputeId: string, txHash: string]
 }>()
 
+const {
+  isConnected: isWalletConnected,
+  connect,
+  address,
+  isCorrectNetwork,
+  switchToCorrectNetwork,
+  getPublicClient,
+  getWalletClient,
+} = useWallet()
 const { createDispute } = useDisputers()
 
 // Form state
@@ -357,7 +369,6 @@ const errors = reactive({
 })
 
 const isSubmitting = ref(false)
-const isWalletConnected = ref(false)
 const showEvidenceInput = ref(false)
 const newEvidence = reactive<{ type: EvidenceItem['type']; content: string }>({
   type: 'url',
@@ -483,8 +494,8 @@ function resetForm() {
   newEvidence.content = ''
 }
 
-function connectWallet() {
-  isWalletConnected.value = true
+async function connectWallet() {
+  await connect('metamask')
 }
 
 function getEvidenceIcon(type: EvidenceItem['type']): string {
@@ -528,18 +539,62 @@ async function handleSubmit() {
   const isReasonValid = validateReason()
 
   if (!isAmountValid || !isReasonValid || isSubmitting.value) return
+  if (!address.value || !props.escrowAddress || !props.campaignId) {
+    errors.reason = 'Wallet not connected or campaign data missing.'
+    return
+  }
+
+  // Ensure correct network
+  if (!isCorrectNetwork.value) {
+    const switched = await switchToCorrectNetwork()
+    if (!switched) {
+      errors.reason = 'Please switch to the correct network.'
+      return
+    }
+  }
 
   isSubmitting.value = true
 
   try {
-    const weiAmount = parseDisputerAmountToWei(form.amount)
+    const weiAmount = BigInt(parseDisputerAmountToWei(form.amount))
+    const pc = getPublicClient()
+    const wc = getWalletClient()
 
-    // Mock transaction hash
-    const txHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`
+    if (!pc || !wc) {
+      errors.reason = 'Wallet client unavailable. Please reconnect.'
+      return
+    }
 
+    const usdcAddress = getUsdcAddress(pc.chain?.id ?? 80002)
+    const escrow = props.escrowAddress as Address
+
+    // Step 1: Approve USDC spend by escrow contract
+    const approveHash = await wc.writeContract({
+      address: usdcAddress,
+      abi: ERC20_ABI,
+      functionName: 'approve',
+      args: [escrow, weiAmount],
+      account: address.value,
+      chain: pc.chain,
+    })
+    await pc.waitForTransactionReceipt({ hash: approveHash })
+
+    // Step 2: Call PledgeEscrow.dispute(amount)
+    const disputeHash = await wc.writeContract({
+      address: escrow,
+      abi: PLEDGE_ESCROW_ABI,
+      functionName: 'dispute',
+      args: [weiAmount],
+      account: address.value,
+      chain: pc.chain,
+    })
+    const receipt = await pc.waitForTransactionReceipt({ hash: disputeHash })
+    const txHash = receipt.transactionHash
+
+    // Step 3: Record dispute in backend
     const response = await createDispute({
       campaignId: props.campaignId,
-      amount: weiAmount,
+      amount: weiAmount.toString(),
       stakeTxHash: txHash,
       reason: form.reason,
       disputeType: form.disputeType,
@@ -553,9 +608,10 @@ async function handleSubmit() {
     } else {
       errors.reason = response.error?.message || 'Failed to create dispute'
     }
-  } catch (error) {
-    console.error('Dispute failed:', error)
-    errors.reason = 'Transaction failed. Please try again.'
+  } catch (error: unknown) {
+    const err = error as { shortMessage?: string; message?: string }
+    if (import.meta.dev) console.error('Dispute failed:', error)
+    errors.reason = err.shortMessage || err.message || 'Transaction failed. Please try again.'
   } finally {
     isSubmitting.value = false
   }

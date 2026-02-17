@@ -10,3 +10,6 @@ ignoredBuiltDependencies:
   - unrs-resolver
   - vue-demi
   - workerd
+
+patchedDependencies:
+  nitro-cloudflare-dev@0.2.2: patches/nitro-cloudflare-dev@0.2.2.patch

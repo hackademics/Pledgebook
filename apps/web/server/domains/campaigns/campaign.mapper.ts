@@ -1,3 +1,4 @@
+import { keccak256, toBytes, toHex } from 'viem'
 import type { Campaign, CampaignResponse, CampaignSummary } from './campaign.schema'
 
 // =============================================================================
@@ -74,17 +75,36 @@ export function toCampaignSummary(row: Campaign): CampaignSummary {
     name: row.name,
     slug: row.slug,
     purpose: row.purpose,
+    description: row.purpose,
     status: row.status,
     imageUrl: row.image_url ?? null,
     amountPledged: row.amount_pledged,
     fundraisingGoal: row.fundraising_goal,
     pledgeCount: row.pledge_count,
+    voucherCount: row.voucher_count,
+    categories: parseJson(row.categories, []),
+    category: parsePrimaryCategory(row.categories),
     isShowcased: Boolean(row.is_showcased),
     isFeatured: Boolean(row.is_featured),
     isVerified: Boolean(row.is_verified),
     endDate: row.end_date,
     createdAt: row.created_at,
   }
+}
+
+/**
+ * Parse the primary (first) category from JSON categories string
+ */
+function parsePrimaryCategory(categories: string | string[]): string {
+  const parsed = parseJson<string[]>(categories as string, [])
+  if (parsed.length > 0) {
+    // Convert slug like 'shelter-housing' to display name
+    return parsed[0]
+      .split('-')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ')
+  }
+  return 'General'
 }
 
 /**
@@ -116,16 +136,8 @@ export function generateCampaignSlug(name: string): string {
 }
 
 /**
- * Generate a prompt hash (keccak256 placeholder - implement with actual hashing)
+ * Generate a prompt hash using keccak256 (matching on-chain hash)
  */
 export function generatePromptHash(prompt: string): string {
-  // In production, use keccak256 from ethers or viem
-  // This is a placeholder that creates a deterministic hash
-  let hash = 0
-  for (let i = 0; i < prompt.length; i++) {
-    const char = prompt.charCodeAt(i)
-    hash = (hash << 5) - hash + char
-    hash = hash & hash
-  }
-  return `0x${Math.abs(hash).toString(16).padStart(64, '0')}`
+  return toHex(keccak256(toBytes(prompt.trim())))
 }

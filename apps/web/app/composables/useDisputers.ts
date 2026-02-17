@@ -1,3 +1,4 @@
+import { ref, onUnmounted } from 'vue'
 import type { ApiResponse, PaginationMeta, PaginationParams } from '../types'
 import type {
   DisputerResponse,
@@ -9,29 +10,49 @@ import type {
 
 /**
  * Composable for disputer API operations
+ * Includes loading state and automatic request cancellation on unmount
  */
 export function useDisputers() {
   const api = useApi()
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  onUnmounted(() => {
+    api.cancelAllRequests()
+  })
+
+  async function withLoading<T>(fn: () => Promise<T>): Promise<T> {
+    loading.value = true
+    error.value = null
+    try {
+      return await fn()
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'An unknown error occurred'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
 
   /**
    * Create a new dispute
    */
   async function createDispute(input: CreateDisputerInput): Promise<ApiResponse<DisputerResponse>> {
-    return api.post<DisputerResponse>('/disputers', input)
+    return withLoading(() => api.post<DisputerResponse>('/disputers', input))
   }
 
   /**
    * Get a dispute by ID
    */
   async function getDispute(disputeId: string): Promise<ApiResponse<DisputerResponse>> {
-    return api.get<DisputerResponse>(`/disputers/${disputeId}`)
+    return withLoading(() => api.get<DisputerResponse>(`/disputers/${disputeId}`))
   }
 
   /**
    * Get a dispute by transaction hash
    */
   async function getDisputeByTxHash(txHash: string): Promise<ApiResponse<DisputerResponse>> {
-    return api.get<DisputerResponse>(`/disputers/tx/${txHash}`)
+    return withLoading(() => api.get<DisputerResponse>(`/disputers/tx/${txHash}`))
   }
 
   /**
@@ -42,7 +63,9 @@ export function useDisputers() {
     params?: PaginationParams,
   ): Promise<ApiResponse<DisputerSummary[]> & { meta?: PaginationMeta }> {
     const query = params ? `?${new URLSearchParams(params as Record<string, string>)}` : ''
-    return api.get<DisputerSummary[]>(`/campaigns/${campaignId}/disputers${query}`)
+    return withLoading(() =>
+      api.get<DisputerSummary[]>(`/campaigns/${campaignId}/disputers${query}`),
+    )
   }
 
   /**
@@ -54,7 +77,7 @@ export function useDisputers() {
   ): Promise<ApiResponse<DisputerSummary[]> & { meta?: PaginationMeta }> {
     const queryParams = { ...params, disputerAddress: address }
     const query = `?${new URLSearchParams(queryParams as unknown as Record<string, string>)}`
-    return api.get<DisputerSummary[]>(`/disputers${query}`)
+    return withLoading(() => api.get<DisputerSummary[]>(`/disputers${query}`))
   }
 
   /**
@@ -64,7 +87,7 @@ export function useDisputers() {
     disputeId: string,
     input: UpdateDisputerInput,
   ): Promise<ApiResponse<DisputerResponse>> {
-    return api.patch<DisputerResponse>(`/disputers/${disputeId}`, input)
+    return withLoading(() => api.patch<DisputerResponse>(`/disputers/${disputeId}`, input))
   }
 
   /**
@@ -74,7 +97,7 @@ export function useDisputers() {
     disputeId: string,
     input: ResolveDisputerInput,
   ): Promise<ApiResponse<DisputerResponse>> {
-    return api.post<DisputerResponse>(`/disputers/${disputeId}/resolve`, input)
+    return withLoading(() => api.post<DisputerResponse>(`/disputers/${disputeId}/resolve`, input))
   }
 
   /**
@@ -85,7 +108,7 @@ export function useDisputers() {
   ): Promise<ApiResponse<DisputerSummary[]> & { meta?: PaginationMeta }> {
     const queryParams = { ...params, status: 'pending' }
     const query = `?${new URLSearchParams(queryParams as unknown as Record<string, string>)}`
-    return api.get<DisputerSummary[]>(`/disputers${query}`)
+    return withLoading(() => api.get<DisputerSummary[]>(`/disputers${query}`))
   }
 
   /**
@@ -124,6 +147,10 @@ export function useDisputers() {
   }
 
   return {
+    // State
+    loading,
+    error,
+    // Actions
     createDispute,
     getDispute,
     getDisputeByTxHash,

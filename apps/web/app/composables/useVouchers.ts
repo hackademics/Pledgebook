@@ -1,3 +1,4 @@
+import { ref, onUnmounted } from 'vue'
 import type { ApiResponse, PaginationMeta, PaginationParams } from '../types'
 import type {
   VoucherResponse,
@@ -8,29 +9,49 @@ import type {
 
 /**
  * Composable for voucher API operations
+ * Includes loading state and automatic request cancellation on unmount
  */
 export function useVouchers() {
   const api = useApi()
+  const loading = ref(false)
+  const error = ref<string | null>(null)
+
+  onUnmounted(() => {
+    api.cancelAllRequests()
+  })
+
+  async function withLoading<T>(fn: () => Promise<T>): Promise<T> {
+    loading.value = true
+    error.value = null
+    try {
+      return await fn()
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : 'An unknown error occurred'
+      throw e
+    } finally {
+      loading.value = false
+    }
+  }
 
   /**
    * Create a new voucher
    */
   async function createVoucher(input: CreateVoucherInput): Promise<ApiResponse<VoucherResponse>> {
-    return api.post<VoucherResponse>('/vouchers', input)
+    return withLoading(() => api.post<VoucherResponse>('/vouchers', input))
   }
 
   /**
    * Get a voucher by ID
    */
   async function getVoucher(voucherId: string): Promise<ApiResponse<VoucherResponse>> {
-    return api.get<VoucherResponse>(`/vouchers/${voucherId}`)
+    return withLoading(() => api.get<VoucherResponse>(`/vouchers/${voucherId}`))
   }
 
   /**
    * Get a voucher by transaction hash
    */
   async function getVoucherByTxHash(txHash: string): Promise<ApiResponse<VoucherResponse>> {
-    return api.get<VoucherResponse>(`/vouchers/tx/${txHash}`)
+    return withLoading(() => api.get<VoucherResponse>(`/vouchers/tx/${txHash}`))
   }
 
   /**
@@ -41,7 +62,7 @@ export function useVouchers() {
     params?: PaginationParams,
   ): Promise<ApiResponse<VoucherSummary[]> & { meta?: PaginationMeta }> {
     const query = params ? `?${new URLSearchParams(params as Record<string, string>)}` : ''
-    return api.get<VoucherSummary[]>(`/campaigns/${campaignId}/vouchers${query}`)
+    return withLoading(() => api.get<VoucherSummary[]>(`/campaigns/${campaignId}/vouchers${query}`))
   }
 
   /**
@@ -53,7 +74,7 @@ export function useVouchers() {
   ): Promise<ApiResponse<VoucherSummary[]> & { meta?: PaginationMeta }> {
     const queryParams = { ...params, voucherAddress: address }
     const query = `?${new URLSearchParams(queryParams as unknown as Record<string, string>)}`
-    return api.get<VoucherSummary[]>(`/vouchers${query}`)
+    return withLoading(() => api.get<VoucherSummary[]>(`/vouchers${query}`))
   }
 
   /**
@@ -63,7 +84,7 @@ export function useVouchers() {
     voucherId: string,
     input: UpdateVoucherInput,
   ): Promise<ApiResponse<VoucherResponse>> {
-    return api.patch<VoucherResponse>(`/vouchers/${voucherId}`, input)
+    return withLoading(() => api.patch<VoucherResponse>(`/vouchers/${voucherId}`, input))
   }
 
   /**
@@ -103,6 +124,10 @@ export function useVouchers() {
   }
 
   return {
+    // State
+    loading,
+    error,
+    // Actions
     createVoucher,
     getVoucher,
     getVoucherByTxHash,

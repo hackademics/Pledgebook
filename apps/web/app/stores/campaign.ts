@@ -223,7 +223,7 @@ export const useCampaignStore = defineStore('campaign', () => {
         return true
       }
     } catch (error) {
-      console.error('Failed to load campaign draft:', error)
+      if (import.meta.dev) console.error('Failed to load campaign draft:', error)
     }
     return false
   }
@@ -253,7 +253,7 @@ export const useCampaignStore = defineStore('campaign', () => {
       draft.value.lastSavedAt = toSave.lastSavedAt
       draft.value.isDirty = false
     } catch (error) {
-      console.error('Failed to save campaign draft:', error)
+      if (import.meta.dev) console.error('Failed to save campaign draft:', error)
       saveError.value = 'Failed to save draft'
     } finally {
       isSaving.value = false
@@ -271,7 +271,7 @@ export const useCampaignStore = defineStore('campaign', () => {
       draft.value = { ...DEFAULT_DRAFT }
       promptSuggestion.value = null
     } catch (error) {
-      console.error('Failed to clear campaign draft:', error)
+      if (import.meta.dev) console.error('Failed to clear campaign draft:', error)
     }
   }
 
@@ -405,7 +405,7 @@ export const useCampaignStore = defineStore('campaign', () => {
 
       return null
     } catch (error) {
-      console.error('Failed to refine prompt:', error)
+      if (import.meta.dev) console.error('Failed to refine prompt:', error)
       return null
     } finally {
       isRefiningPrompt.value = false

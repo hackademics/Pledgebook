@@ -1,0 +1,14 @@
+diff --git a/dist/runtime/plugin.dev.mjs b/dist/runtime/plugin.dev.mjs
+index 9e44a03daf9c415bc806af8d99e6dbec15ee9f01..7ce18a7718be185320cce6d310f984082e0a2b56 100644
+--- a/dist/runtime/plugin.dev.mjs
++++ b/dist/runtime/plugin.dev.mjs
+@@ -40,7 +40,8 @@ async function _getPlatformProxy() {
+   const runtimeConfig = useRuntimeConfig();
+   const proxyOptions = {
+     configPath: runtimeConfig.wrangler.configPath,
+-    persist: { path: runtimeConfig.wrangler.persistDir }
++    persist: { path: runtimeConfig.wrangler.persistDir },
++    remoteBindings: false
+   };
+   if (runtimeConfig.wrangler.environment) {
+     proxyOptions.environment = runtimeConfig.wrangler.environment;

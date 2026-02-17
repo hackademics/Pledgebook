@@ -107,7 +107,7 @@
               Campaign
             </h2>
             <NuxtLink
-              :to="`/campaigns/${voucher.campaignId}`"
+              :to="`/@${voucher.campaignSlug || voucher.campaignId}`"
               class="detail-card__campaign-link"
             >
               <div class="detail-card__campaign-icon">
@@ -287,11 +287,13 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useAsyncData, useSeoMeta } from 'nuxt/app'
 import type { VoucherResponse } from '../../types/voucher'
 import { getVoucherStatusConfig, formatVoucherAmount, getVoucherActions } from '../../types/voucher'
 import { useVouchers } from '../../composables/useVouchers'
+import { PLEDGE_ESCROW_ABI } from '~/config/contracts'
+import type { Address } from 'viem'
 
 const route = useRoute()
 const voucherId = computed(() => route.params.id as string)
@@ -341,9 +343,64 @@ function formatDateTime(dateString: string | null): string {
   }).format(date)
 }
 
-function handleWithdraw() {
-  // TODO: Implement withdraw functionality
-  console.log('Withdraw voucher:', voucherId.value)
+const withdrawing = ref(false)
+const actionError = ref<string | null>(null)
+
+async function handleWithdraw() {
+  if (!voucher.value) return
+  const { address, isCorrectNetwork, switchToCorrectNetwork, getPublicClient, getWalletClient } =
+    useWallet()
+  if (!address.value) {
+    actionError.value = 'Please connect your wallet first.'
+    return
+  }
+  if (!isCorrectNetwork.value) {
+    const switched = await switchToCorrectNetwork()
+    if (!switched) {
+      actionError.value = 'Please switch to the correct network.'
+      return
+    }
+  }
+
+  withdrawing.value = true
+  actionError.value = null
+
+  try {
+    const api = useApi()
+    const campaignRes = await api.get<{ escrowAddress: string | null }>(
+      `/campaigns/${voucher.value.campaignId}`,
+    )
+    const escrowAddress = campaignRes.data?.escrowAddress
+    if (!escrowAddress) {
+      actionError.value = 'Campaign escrow address not found.'
+      return
+    }
+
+    const pc = getPublicClient()
+    const wc = getWalletClient()
+    if (!pc || !wc) {
+      actionError.value = 'Wallet client unavailable. Please reconnect.'
+      return
+    }
+
+    const txHash = await wc.writeContract({
+      address: escrowAddress as Address,
+      abi: PLEDGE_ESCROW_ABI,
+      functionName: 'claimVoucher',
+      args: [],
+      account: address.value,
+      chain: pc.chain,
+    })
+    await pc.waitForTransactionReceipt({ hash: txHash })
+
+    const { updateVoucher } = useVouchers()
+    await updateVoucher(voucher.value.id, { status: 'withdrawn' })
+  } catch (error: unknown) {
+    const err = error as { shortMessage?: string; message?: string }
+    actionError.value = err.shortMessage || err.message || 'Withdraw failed. Please try again.'
+  } finally {
+    withdrawing.value = false
+  }
 }
 
 useSeoMeta({

@@ -1,4 +1,13 @@
 import { z } from 'zod'
+import {
+  walletAddressSchema,
+  campaignIdSchema,
+  weiAmountSchema,
+  txHashSchema,
+  coerceNumber,
+} from '../shared.schema'
+
+export { walletAddressSchema, campaignIdSchema, weiAmountSchema, txHashSchema }
 
 // =============================================================================
 // VOUCHER DOMAIN SCHEMAS
@@ -11,19 +20,6 @@ import { z } from 'zod'
 export const voucherIdSchema = z.string().uuid('Invalid voucher ID format')
 
 /**
- * Campaign ID validation
- */
-export const campaignIdSchema = z.string().uuid('Invalid campaign ID format')
-
-/**
- * Ethereum wallet address validation
- */
-export const walletAddressSchema = z
-  .string()
-  .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum wallet address')
-  .transform((val) => val.toLowerCase())
-
-/**
  * Voucher status enum
  */
 export const voucherStatusSchema = z.enum([
@@ -34,16 +30,6 @@ export const voucherStatusSchema = z.enum([
   'withdrawn',
   'expired',
 ])
-
-/**
- * Wei amount validation
- */
-export const weiAmountSchema = z.string().regex(/^\d+$/, 'Amount must be a positive integer string')
-
-/**
- * Transaction hash validation
- */
-export const txHashSchema = z.string().regex(/^0x[a-fA-F0-9]{64}$/, 'Invalid transaction hash')
 
 /**
  * Base Voucher schema (database row representation)
@@ -80,6 +66,7 @@ export const voucherSchema = z.object({
 export const voucherResponseSchema = z.object({
   id: z.string(),
   campaignId: z.string(),
+  campaignSlug: z.string().optional(),
   voucherAddress: z.string(),
   amount: z.string(),
   status: voucherStatusSchema,
@@ -108,6 +95,7 @@ export const voucherResponseSchema = z.object({
 export const voucherSummarySchema = z.object({
   id: z.string(),
   campaignId: z.string(),
+  campaignSlug: z.string().optional(),
   voucherAddress: z.string(),
   amount: z.string(),
   status: voucherStatusSchema,
@@ -139,15 +127,6 @@ export const updateVoucherSchema = z.object({
   slashReason: z.string().max(500).optional(),
   rewardEarned: weiAmountSchema.optional(),
 })
-
-/**
- * Coerce string to number with undefined fallback
- */
-const coerceNumber = (defaultValue: number) =>
-  z.preprocess(
-    (val) => (val === undefined || val === '' ? defaultValue : Number(val)),
-    z.number().int(),
-  )
 
 /**
  * Query parameters for listing vouchers

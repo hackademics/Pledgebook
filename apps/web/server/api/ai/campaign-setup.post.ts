@@ -2,6 +2,7 @@ import { defineEventHandler } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import { parseBody } from '../../utils/response'
 import { handleError } from '../../utils/errors'
+import { requireWalletAddress } from '../../utils/auth'
 import { campaignSetupHelpRequestSchema } from '../../domains/ai/ai.schema'
 import { useAIService } from '../../domains/ai/ai.service'
 
@@ -37,8 +38,8 @@ import { useAIService } from '../../domains/ai/ai.service'
  */
 export default defineEventHandler(async (event) => {
   try {
-    // TODO: Add authentication check
-    // await requireAuth(event)
+    // Require authenticated user - throws if not authorized
+    requireWalletAddress(event)
 
     // Get API keys from runtime config (Cloudflare-compatible)
     const config = useRuntimeConfig(event)

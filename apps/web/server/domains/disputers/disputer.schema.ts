@@ -1,4 +1,13 @@
 import { z } from 'zod'
+import {
+  walletAddressSchema,
+  campaignIdSchema,
+  weiAmountSchema,
+  txHashSchema,
+  coerceNumber,
+} from '../shared.schema'
+
+export { walletAddressSchema, campaignIdSchema, weiAmountSchema, txHashSchema }
 
 // =============================================================================
 // DISPUTER DOMAIN SCHEMAS
@@ -9,19 +18,6 @@ import { z } from 'zod'
  * UUID validation for disputer ID
  */
 export const disputerIdSchema = z.string().uuid('Invalid disputer ID format')
-
-/**
- * Campaign ID validation
- */
-export const campaignIdSchema = z.string().uuid('Invalid campaign ID format')
-
-/**
- * Ethereum wallet address validation
- */
-export const walletAddressSchema = z
-  .string()
-  .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum wallet address')
-  .transform((val) => val.toLowerCase())
 
 /**
  * Disputer status enum
@@ -50,16 +46,6 @@ export const disputeTypeSchema = z.enum([
  * Resolution outcome enum
  */
 export const resolutionOutcomeSchema = z.enum(['upheld', 'rejected', 'partial'])
-
-/**
- * Wei amount validation
- */
-export const weiAmountSchema = z.string().regex(/^\d+$/, 'Amount must be a positive integer string')
-
-/**
- * Transaction hash validation
- */
-export const txHashSchema = z.string().regex(/^0x[a-fA-F0-9]{64}$/, 'Invalid transaction hash')
 
 /**
  * Base Disputer schema (database row representation)
@@ -96,6 +82,7 @@ export const disputerSchema = z.object({
 export const disputerResponseSchema = z.object({
   id: z.string(),
   campaignId: z.string(),
+  campaignSlug: z.string().optional(),
   disputerAddress: z.string(),
   amount: z.string(),
   status: disputerStatusSchema,
@@ -124,6 +111,7 @@ export const disputerResponseSchema = z.object({
 export const disputerSummarySchema = z.object({
   id: z.string(),
   campaignId: z.string(),
+  campaignSlug: z.string().optional(),
   disputerAddress: z.string(),
   amount: z.string(),
   status: disputerStatusSchema,
@@ -176,15 +164,6 @@ export const resolveDisputerSchema = z.object({
   stakeReturned: weiAmountSchema.optional(),
   stakeSlashed: weiAmountSchema.optional(),
 })
-
-/**
- * Coerce string to number with undefined fallback
- */
-const coerceNumber = (defaultValue: number) =>
-  z.preprocess(
-    (val) => (val === undefined || val === '' ? defaultValue : Number(val)),
-    z.number().int(),
-  )
 
 /**
  * Query parameters for listing disputers

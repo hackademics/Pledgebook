@@ -1,4 +1,13 @@
 import { z } from 'zod'
+import {
+  walletAddressSchema,
+  campaignIdSchema,
+  weiAmountSchema,
+  txHashSchema,
+  coerceNumber,
+} from '../shared.schema'
+
+export { walletAddressSchema, campaignIdSchema, weiAmountSchema, txHashSchema }
 
 // =============================================================================
 // PLEDGE DOMAIN SCHEMAS
@@ -11,19 +20,6 @@ import { z } from 'zod'
 export const pledgeIdSchema = z.string().uuid('Invalid pledge ID format')
 
 /**
- * Campaign ID validation
- */
-export const campaignIdSchema = z.string().uuid('Invalid campaign ID format')
-
-/**
- * Ethereum wallet address validation
- */
-export const walletAddressSchema = z
-  .string()
-  .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum wallet address')
-  .transform((val) => val.toLowerCase())
-
-/**
  * Pledge status enum
  */
 export const pledgeStatusSchema = z.enum([
@@ -34,16 +30,6 @@ export const pledgeStatusSchema = z.enum([
   'refunded',
   'failed',
 ])
-
-/**
- * Wei amount validation
- */
-export const weiAmountSchema = z.string().regex(/^\d+$/, 'Amount must be a positive integer string')
-
-/**
- * Transaction hash validation
- */
-export const txHashSchema = z.string().regex(/^0x[a-fA-F0-9]{64}$/, 'Invalid transaction hash')
 
 /**
  * Base Pledge schema (database row representation)
@@ -137,15 +123,6 @@ export const updatePledgeSchema = z.object({
   releaseTxHash: txHashSchema.optional(),
   refundTxHash: txHashSchema.optional(),
 })
-
-/**
- * Coerce string to number with undefined fallback
- */
-const coerceNumber = (defaultValue: number) =>
-  z.preprocess(
-    (val) => (val === undefined || val === '' ? defaultValue : Number(val)),
-    z.number().int(),
-  )
 
 /**
  * Query parameters for listing pledges

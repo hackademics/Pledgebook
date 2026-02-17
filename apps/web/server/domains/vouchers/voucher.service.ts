@@ -76,7 +76,14 @@ export function createVoucherService(deps: VoucherServiceDependencies): VoucherS
         })
       }
 
-      return toVoucherResponse(voucher)
+      // Enrich with campaign slug for frontend routing
+      let campaignSlug: string | undefined
+      if (campaignRepository) {
+        const campaign = await campaignRepository.findById(voucher.campaign_id)
+        campaignSlug = campaign?.slug
+      }
+
+      return toVoucherResponse(voucher, campaignSlug)
     },
 
     /**

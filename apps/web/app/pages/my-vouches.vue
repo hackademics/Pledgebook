@@ -161,9 +161,10 @@ import { useAsyncData, useSeoMeta } from 'nuxt/app'
 import type { VoucherSummary } from '../types/voucher'
 import { formatVoucherAmount } from '../types/voucher'
 import { useVouchers } from '../composables/useVouchers'
+import { PLEDGE_ESCROW_ABI } from '~/config/contracts'
+import type { Address } from 'viem'
 
-// Mock address - replace with actual wallet connection
-const walletAddress = ref('0x1234567890abcdef1234567890abcdef12345678')
+const { address: walletAddress } = useWallet()
 
 const { getVouchersByAddress, getVoucherStats } = useVouchers()
 
@@ -180,6 +181,8 @@ const stats = ref({ total: 0, active: 0, totalStaked: '0' })
 const { data: vouchersData, pending } = await useAsyncData(
   'my-vouches',
   async () => {
+    if (!walletAddress.value) return []
+
     const [vouchersResponse, statsData] = await Promise.all([
       getVouchersByAddress(walletAddress.value, {
         page: currentPage.value,
@@ -236,12 +239,121 @@ function toggleSortOrder() {
   sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'
 }
 
-function handleWithdraw(voucher: VoucherSummary) {
-  console.log('Withdraw voucher:', voucher.id)
+const withdrawing = ref<string | null>(null)
+const actionError = ref<string | null>(null)
+
+async function handleWithdraw(voucher: VoucherSummary) {
+  const { address, isCorrectNetwork, switchToCorrectNetwork, getPublicClient, getWalletClient } =
+    useWallet()
+  if (!address.value) {
+    actionError.value = 'Please connect your wallet first.'
+    return
+  }
+  if (!isCorrectNetwork.value) {
+    const switched = await switchToCorrectNetwork()
+    if (!switched) {
+      actionError.value = 'Please switch to the correct network.'
+      return
+    }
+  }
+
+  withdrawing.value = voucher.id
+  actionError.value = null
+
+  try {
+    // Fetch campaign to get escrow address
+    const api = useApi()
+    const campaignRes = await api.get<{ escrowAddress: string | null }>(
+      `/campaigns/${voucher.campaignId}`,
+    )
+    const escrowAddress = campaignRes.data?.escrowAddress
+    if (!escrowAddress) {
+      actionError.value = 'Campaign escrow address not found.'
+      return
+    }
+
+    const pc = getPublicClient()
+    const wc = getWalletClient()
+    if (!pc || !wc) {
+      actionError.value = 'Wallet client unavailable. Please reconnect.'
+      return
+    }
+
+    const txHash = await wc.writeContract({
+      address: escrowAddress as Address,
+      abi: PLEDGE_ESCROW_ABI,
+      functionName: 'claimVoucher',
+      args: [],
+      account: address.value,
+      chain: pc.chain,
+    })
+    await pc.waitForTransactionReceipt({ hash: txHash })
+
+    // Update voucher status in backend
+    const { updateVoucher } = useVouchers()
+    await updateVoucher(voucher.id, { status: 'withdrawn' })
+  } catch (error: unknown) {
+    const err = error as { shortMessage?: string; message?: string }
+    actionError.value = err.shortMessage || err.message || 'Withdraw failed. Please try again.'
+  } finally {
+    withdrawing.value = null
+  }
 }
 
-function handleRelease(voucher: VoucherSummary) {
-  console.log('Release voucher:', voucher.id)
+async function handleRelease(voucher: VoucherSummary) {
+  const { address, isCorrectNetwork, switchToCorrectNetwork, getPublicClient, getWalletClient } =
+    useWallet()
+  if (!address.value) {
+    actionError.value = 'Please connect your wallet first.'
+    return
+  }
+  if (!isCorrectNetwork.value) {
+    const switched = await switchToCorrectNetwork()
+    if (!switched) {
+      actionError.value = 'Please switch to the correct network.'
+      return
+    }
+  }
+
+  withdrawing.value = voucher.id
+  actionError.value = null
+
+  try {
+    const api = useApi()
+    const campaignRes = await api.get<{ escrowAddress: string | null }>(
+      `/campaigns/${voucher.campaignId}`,
+    )
+    const escrowAddress = campaignRes.data?.escrowAddress
+    if (!escrowAddress) {
+      actionError.value = 'Campaign escrow address not found.'
+      return
+    }
+
+    const pc = getPublicClient()
+    const wc = getWalletClient()
+    if (!pc || !wc) {
+      actionError.value = 'Wallet client unavailable. Please reconnect.'
+      return
+    }
+
+    const txHash = await wc.writeContract({
+      address: escrowAddress as Address,
+      abi: PLEDGE_ESCROW_ABI,
+      functionName: 'claimVoucher',
+      args: [],
+      account: address.value,
+      chain: pc.chain,
+    })
+    await pc.waitForTransactionReceipt({ hash: txHash })
+
+    const { updateVoucher } = useVouchers()
+    await updateVoucher(voucher.id, { status: 'released', releaseTxHash: txHash })
+  } catch (error: unknown) {
+    const err = error as { shortMessage?: string; message?: string }
+    actionError.value = err.shortMessage || err.message || 'Release failed. Please try again.'
+  } finally {
+    withdrawing.value = null
+  }
 }
 
 // Reset page when filters change

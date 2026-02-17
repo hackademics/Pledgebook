@@ -77,7 +77,14 @@ export function createDisputerService(deps: DisputerServiceDependencies): Disput
         })
       }
 
-      return toDisputerResponse(disputer)
+      // Enrich with campaign slug for frontend routing
+      let campaignSlug: string | undefined
+      if (campaignRepository) {
+        const campaign = await campaignRepository.findById(disputer.campaign_id)
+        campaignSlug = campaign?.slug
+      }
+
+      return toDisputerResponse(disputer, campaignSlug)
     },
 
     /**

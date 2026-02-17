@@ -18,8 +18,7 @@ export const USDC_ADDRESS_AMOY: Address = '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0
 export const USDC_ADDRESS_POLYGON: Address = '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359'
 
 /**
- * Minimal ERC20 ABI for balance reading
- * Only includes the functions we need to reduce bundle size
+ * ERC20 ABI — includes read + approve for USDC interactions
  */
 export const ERC20_ABI: Abi = [
   {
@@ -49,6 +48,172 @@ export const ERC20_ABI: Abi = [
     stateMutability: 'view',
     inputs: [],
     outputs: [{ name: '', type: 'string' }],
+  },
+  {
+    type: 'function',
+    name: 'approve',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'spender', type: 'address' },
+      { name: 'amount', type: 'uint256' },
+    ],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+  {
+    type: 'function',
+    name: 'allowance',
+    stateMutability: 'view',
+    inputs: [
+      { name: 'owner', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+] as const
+
+/**
+ * PledgeEscrow ABI — per-campaign escrow for pledges, vouches, and disputes
+ * Matches PledgeEscrow.sol (Solidity 0.8.20)
+ */
+export const PLEDGE_ESCROW_ABI: Abi = [
+  // Write functions
+  {
+    type: 'function',
+    name: 'pledge',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'amount', type: 'uint256' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'vouch',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'amount', type: 'uint256' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'dispute',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'amount', type: 'uint256' },
+      { name: 'reason', type: 'string' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'claimPledgeRefund',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'claimVoucher',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'claimDisputeStake',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
+  // Read functions
+  {
+    type: 'function',
+    name: 'pledges',
+    stateMutability: 'view',
+    inputs: [{ name: '', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'vouchers',
+    stateMutability: 'view',
+    inputs: [{ name: '', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'disputers',
+    stateMutability: 'view',
+    inputs: [{ name: '', type: 'address' }],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'status',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint8' }],
+  },
+  {
+    type: 'function',
+    name: 'amountPledged',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'totalVouched',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'totalDisputed',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'finalized',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+  {
+    type: 'function',
+    name: 'outcomeSuccess',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'bool' }],
+  },
+  // Events
+  {
+    type: 'event',
+    name: 'Pledged',
+    inputs: [
+      { name: 'id', type: 'uint256', indexed: true },
+      { name: 'pledger', type: 'address', indexed: true },
+      { name: 'amount', type: 'uint256', indexed: false },
+    ],
+  },
+  {
+    type: 'event',
+    name: 'Vouched',
+    inputs: [
+      { name: 'id', type: 'uint256', indexed: true },
+      { name: 'voucher', type: 'address', indexed: true },
+      { name: 'amount', type: 'uint256', indexed: false },
+    ],
+  },
+  {
+    type: 'event',
+    name: 'Disputed',
+    inputs: [
+      { name: 'id', type: 'uint256', indexed: true },
+      { name: 'disputer', type: 'address', indexed: true },
+      { name: 'amount', type: 'uint256', indexed: false },
+      { name: 'reason', type: 'string', indexed: false },
+    ],
   },
 ] as const
 

@@ -72,8 +72,11 @@ export function createUserRepository(db: D1Database): UserRepository {
       }
 
       if (search) {
-        conditions.push('(address LIKE ? OR display_name LIKE ? OR ens_name LIKE ?)')
-        const searchPattern = `%${search}%`
+        conditions.push(
+          '(address LIKE ? ESCAPE "\\" OR display_name LIKE ? ESCAPE "\\" OR ens_name LIKE ? ESCAPE "\\")',
+        )
+        const escapedSearch = search.replace(/[%_\\]/g, '\\$&')
+        const searchPattern = `%${escapedSearch}%`
         params.push(searchPattern, searchPattern, searchPattern)
       }
 

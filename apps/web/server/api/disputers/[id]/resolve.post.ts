@@ -2,7 +2,7 @@ import { defineEventHandler } from 'h3'
 import { useCloudflare } from '../../../utils/cloudflare'
 import { handleError } from '../../../utils/errors'
 import { sendSuccess, parseBody, getRequiredParam } from '../../../utils/response'
-import { requireWalletAddress } from '../../../utils/auth'
+import { requireAdmin } from '../../../utils/admin'
 import {
   createDisputerRepository,
   createDisputerService,
@@ -26,10 +26,8 @@ export default defineEventHandler(async (event) => {
     // Parse and validate request body
     const body = await parseBody(event, resolveDisputerSchema)
 
-    // TODO: Get resolver address from authenticated admin session
-    const resolverAddress = requireWalletAddress(event)
-
-    // TODO: Verify resolver has admin/verifier role
+    // Require admin role - throws if not authorized
+    const resolverAddress = requireAdmin(event)
 
     // Initialize repository and service
     const repository = createDisputerRepository(DB)

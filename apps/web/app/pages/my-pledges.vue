@@ -193,7 +193,7 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useSeoMeta } from 'nuxt/app'
+import { useAsyncData, useSeoMeta } from 'nuxt/app'
 import { formatPledgeAmount, getPledgeStatusConfig } from '../types/pledge'
 import type { PledgeStatus } from '../types/pledge'
 
@@ -201,6 +201,9 @@ useSeoMeta({
   title: 'My Pledges | Pledgebook',
   description: 'View and track all your pledges and contributions.',
 })
+
+const { address: walletAddress } = useWallet()
+const { getMyPledges } = usePledges()
 
 // State
 const statusFilter = ref<'all' | PledgeStatus>('all')
@@ -219,59 +222,46 @@ interface MyPledge {
   pledgedAt: string
 }
 
-// Mock data - replace with actual API call
-const pledges = ref<MyPledge[]>([
-  {
-    id: 'pledge-1',
-    campaignSlug: 'clean-water-initiative',
-    campaignTitle: 'Clean Water Access Initiative',
-    campaignCreator: 'Amina A.',
-    campaignImage:
-      'https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=400&q=80',
-    amount: '5000000000',
-    status: 'active' as PledgeStatus,
-    pledgedAt: '2026-01-31T10:00:00Z',
+// Fetch pledges from API
+const { data: pledgesData } = await useAsyncData(
+  'my-pledges',
+  async () => {
+    if (!walletAddress.value) return []
+    const response = await getMyPledges({
+      page: currentPage.value,
+      limit: 100,
+      sortBy: sortBy.value,
+      sortOrder: 'desc',
+    })
+    if (response.success && response.data) {
+      return response.data.map(
+        (p): MyPledge => ({
+          id: p.id,
+          campaignSlug: ((p as unknown as Record<string, unknown>).campaignSlug as string) ?? '',
+          campaignTitle:
+            ((p as unknown as Record<string, unknown>).campaignTitle as string) ?? 'Campaign',
+          campaignCreator:
+            ((p as unknown as Record<string, unknown>).campaignCreator as string) ?? '',
+          campaignImage: ((p as unknown as Record<string, unknown>).campaignImage as string) ?? '',
+          amount: p.amount,
+          status: p.status as PledgeStatus,
+          pledgedAt: p.pledgedAt ?? '',
+        }),
+      )
+    }
+    return []
   },
-  {
-    id: 'pledge-2',
-    campaignSlug: 'reforestation-project',
-    campaignTitle: 'Amazon Reforestation Project',
-    campaignCreator: 'EcoFund DAO',
-    campaignImage:
-      'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=400&q=80',
-    amount: '2500000000',
-    status: 'confirmed' as PledgeStatus,
-    pledgedAt: '2026-01-28T15:00:00Z',
-  },
-  {
-    id: 'pledge-3',
-    campaignSlug: 'education-for-all',
-    campaignTitle: 'Education for All Initiative',
-    campaignCreator: 'Learn Foundation',
-    campaignImage:
-      'https://images.unsplash.com/photo-1503676260728-1c00da094a0b?auto=format&fit=crop&w=400&q=80',
-    amount: '1000000000',
-    status: 'released' as PledgeStatus,
-    pledgedAt: '2026-01-15T09:00:00Z',
-  },
-  {
-    id: 'pledge-4',
-    campaignSlug: 'solar-energy-villages',
-    campaignTitle: 'Solar Energy for Remote Villages',
-    campaignCreator: 'Green Power Co.',
-    campaignImage:
-      'https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=400&q=80',
-    amount: '3000000000',
-    status: 'pending' as PledgeStatus,
-    pledgedAt: '2026-02-01T12:00:00Z',
-  },
-])
+  { watch: [currentPage, sortBy] },
+)
+
+const pledges = computed(() => pledgesData.value ?? [])
 
 // Computed
 const totalPledges = computed(() => pledges.value.length)
 
 const activePledges = computed(
-  () => pledges.value.filter((p) => p.status === 'active' || p.status === 'confirmed').length,
+  () =>
+    pledges.value.filter((p: MyPledge) => p.status === 'active' || p.status === 'confirmed').length,
 )
 
 const totalAmount = computed(() => {

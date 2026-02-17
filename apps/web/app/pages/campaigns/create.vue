@@ -250,7 +250,7 @@
             </div>
             <div class="success-modal__actions">
               <NuxtLink
-                :to="`/campaigns/${submittedCampaign?.slug || submittedCampaign?.id}`"
+                :to="`/@${submittedCampaign?.slug || submittedCampaign?.id}`"
                 class="btn btn--primary"
               >
                 View Campaign
@@ -411,7 +411,7 @@ async function handleSubmit(
       color: 'success',
     })
   } catch (error) {
-    console.error('Failed to submit campaign:', error)
+    if (import.meta.dev) console.error('Failed to submit campaign:', error)
     toast.add({
       title: 'Submission Failed',
       description: error instanceof Error ? error.message : 'Please try again.',
@@ -424,8 +424,7 @@ async function handleSubmit(
 }
 
 function handleSaveDraft(): void {
-  // Draft is auto-saved by the store, but we can show feedback
-  console.log('Draft saved')
+  // Draft is auto-saved by the store, feedback is provided via UI state
 }
 
 function handleCreateAnother(): void {

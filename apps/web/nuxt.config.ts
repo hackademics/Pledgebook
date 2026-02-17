@@ -111,6 +111,12 @@ export default defineNuxtConfig({
     // Enable Cloudflare bindings in local development
     modules: ['nitro-cloudflare-dev'],
 
+    // nitro-cloudflare-dev options (NOT under cloudflare.wrangler!)
+    cloudflareDev: {
+      configPath: './wrangler.toml',
+      persistDir: '.wrangler/state/v3',
+    },
+
     // Output configuration for Cloudflare Pages
     output: {
       dir: '.output',
@@ -162,11 +168,7 @@ export default defineNuxtConfig({
           exclude: ['/_fonts/*', '/_nuxt/*', '/manifest.json', '/robots.txt'],
         },
       },
-      // Enable local development bindings using wrangler.toml
-      wrangler: {
-        configPath: './wrangler.toml',
-        persistDir: '.wrangler/state',
-      },
+      // Cloudflare Pages route config (used at build time, NOT for local dev bindings)
     },
 
     // Disable auto-generated public assets in routes to avoid long paths
@@ -214,6 +216,13 @@ export default defineNuxtConfig({
 
   // Fonts optimization - with fallback metrics to prevent layout shift (CLS)
   fonts: {
+    // Only enable providers we actually use (prevents fontshare/bunny/fontsource init errors)
+    providers: {
+      google: false,
+      fontshare: false,
+      bunny: false,
+      fontsource: false,
+    },
     defaults: {
       weights: [400, 600],
       styles: ['normal'],
@@ -256,6 +265,16 @@ export default defineNuxtConfig({
     strategy: 'prefix_except_default',
     bundle: {
       optimizeTranslationDirective: false,
+    },
+  },
+
+  // Icon configuration - limit to icon sets we actually use
+  icon: {
+    // Only fetch collections we reference (heroicons); skip Google Material Symbols
+    serverBundle: 'auto',
+    fallbackToApi: false,
+    clientBundle: {
+      scan: true,
     },
   },
 

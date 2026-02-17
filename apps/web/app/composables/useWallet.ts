@@ -5,12 +5,13 @@
 // Network: Polygon Amoy Testnet (dev) / Polygon Mainnet (prod)
 // =============================================================================
 
-import { ref, computed, onMounted } from 'vue'
+import { computed, onMounted, onUnmounted } from 'vue'
 import {
   createPublicClient,
   createWalletClient,
   custom,
   formatUnits,
+  getAddress,
   type PublicClient,
   type WalletClient,
   type Address,
@@ -71,10 +72,30 @@ const NETWORK_NAMES: Record<number, string> = {
 const USDC_DECIMALS = 6
 
 // =============================================================================
-// GLOBAL STATE (Shared across components)
+// CLIENT-SIDE LOGGING HELPERS
 // =============================================================================
 
-const walletState = ref<WalletState>({
+const LOG_PREFIX = '[useWallet]'
+
+function logWarn(message: string, ...args: unknown[]): void {
+  if (import.meta.dev) {
+    console.warn(`${LOG_PREFIX} ${message}`, ...args)
+  }
+}
+
+function logError(message: string, ...args: unknown[]): void {
+  if (import.meta.dev) {
+    console.error(`${LOG_PREFIX} ${message}`, ...args)
+  }
+}
+
+// =============================================================================
+// SSR-SAFE GLOBAL STATE
+// Uses Nuxt's useState() for reactive state (SSR-safe, per-request isolated)
+// Non-reactive client singletons are guarded behind import.meta.client
+// =============================================================================
+
+const DEFAULT_WALLET_STATE: WalletState = {
   isConnected: false,
   isConnecting: false,
   address: null,
@@ -84,14 +105,43 @@ const walletState = ref<WalletState>({
   networkIcon: '/images/networks/polygon.svg',
   balance: '0.00',
   error: null,
-})
+}
 
-// Track initialization state to prevent UI flickering on page load
-const isInitializing = ref(true)
+// SSR-safe reactive state via Nuxt useState (isolated per request on server)
+function getWalletState() {
+  return useState<WalletState>('wallet-state', () => ({ ...DEFAULT_WALLET_STATE }))
+}
+
+function getIsInitializing() {
+  return useState<boolean>('wallet-initializing', () => true)
+}
+
+// Client-only mutable singletons — never accessed during SSR
+let componentInstanceCount = 0
+let listenersAttached = false
 
 let publicClient: PublicClient | null = null
 let walletClient: WalletClient | null = null
 let ethereumProvider: EthereumProvider | null = null
+
+// Proxy accessors for module-level helper functions.
+// These delegate to useState() refs, ensuring SSR-safe per-request isolation.
+const walletState = {
+  get value() {
+    return getWalletState().value
+  },
+  set value(v: WalletState) {
+    getWalletState().value = v
+  },
+}
+const isInitializing = {
+  get value() {
+    return getIsInitializing().value
+  },
+  set value(v: boolean) {
+    getIsInitializing().value = v
+  },
+}
 
 // =============================================================================
 // HELPER FUNCTIONS
@@ -106,7 +156,7 @@ function getEthereumProvider(providerId: WalletProvider): EthereumProvider | nul
   const ethereum = (window as unknown as { ethereum?: EthereumProvider }).ethereum
 
   if (!ethereum) {
-    console.warn('No Ethereum provider found')
+    logWarn('No Ethereum provider found')
     return null
   }
 
@@ -158,20 +208,22 @@ function getChainById(chainId: number): Chain {
  * Remove provider event listeners
  */
 function removeProviderListeners(): void {
-  if (!ethereumProvider) return
+  if (!ethereumProvider || !listenersAttached) return
   ethereumProvider.removeListener('accountsChanged', handleAccountsChanged)
   ethereumProvider.removeListener('chainChanged', handleChainChanged)
   ethereumProvider.removeListener('disconnect', handleDisconnect)
+  listenersAttached = false
 }
 
 /**
  * Attach provider event listeners
  */
 function attachProviderListeners(): void {
-  if (!ethereumProvider) return
+  if (!ethereumProvider || listenersAttached) return
   ethereumProvider.on('accountsChanged', handleAccountsChanged)
   ethereumProvider.on('chainChanged', handleChainChanged)
   ethereumProvider.on('disconnect', handleDisconnect)
+  listenersAttached = true
 }
 
 /**
@@ -198,7 +250,7 @@ async function applyConnection(
   walletState.value = {
     isConnected: true,
     isConnecting: false,
-    address: accounts[0] as Address,
+    address: getAddress(accounts[0]) as Address,
     provider: providerId,
     chainId,
     network: NETWORK_NAMES[chainId] || `Chain ${chainId}`,
@@ -230,7 +282,7 @@ function handleAccountsChanged(accounts: unknown): void {
     resetWalletState()
   } else {
     // Account changed
-    walletState.value.address = accountList[0] as Address
+    walletState.value.address = getAddress(accountList[0]) as Address
     // Refresh balance
     fetchUsdcBalance()
   }
@@ -306,7 +358,7 @@ async function fetchUsdcBalance(): Promise<void> {
 
     walletState.value.balance = formatBalance(balance, USDC_DECIMALS)
   } catch (error) {
-    console.error('Failed to fetch USDC balance:', error)
+    logError('Failed to fetch USDC balance:', error)
     walletState.value.balance = '0.00'
   }
 }
@@ -345,11 +397,11 @@ async function switchToCorrectNetwork(): Promise<boolean> {
         })
         return true
       } catch (addError) {
-        console.error('Failed to add chain:', addError)
+        logError('Failed to add chain:', addError)
         return false
       }
     }
-    console.error('Failed to switch chain:', switchError)
+    logError('Failed to switch chain:', switchError)
     return false
   }
 }
@@ -395,7 +447,7 @@ async function connect(providerId: WalletProvider): Promise<boolean> {
 
     return true
   } catch (error) {
-    console.error('Failed to connect wallet:', error)
+    logError('Failed to connect wallet:', error)
     const err = error as { code?: number; message?: string }
 
     if (err.code === 4001) {
@@ -428,7 +480,7 @@ async function copyAddress(): Promise<boolean> {
     await navigator.clipboard.writeText(walletState.value.address)
     return true
   } catch (error) {
-    console.error('Failed to copy address:', error)
+    logError('Failed to copy address:', error)
     return false
   }
 }
@@ -468,35 +520,46 @@ function isProviderAvailable(providerId: WalletProvider): boolean {
 // =============================================================================
 
 export function useWallet() {
+  // Resolve lazy state refs
+  const state = getWalletState()
+  const initializing = getIsInitializing()
+
   // Computed properties
-  const isReady = computed(() => !isInitializing.value)
-  const isConnected = computed(() => walletState.value.isConnected)
-  const isConnecting = computed(() => walletState.value.isConnecting)
-  const address = computed(() => walletState.value.address)
-  const provider = computed(() => walletState.value.provider)
-  const network = computed(() => walletState.value.network)
-  const networkIcon = computed(() => walletState.value.networkIcon)
-  const balance = computed(() => walletState.value.balance)
-  const chainId = computed(() => walletState.value.chainId)
-  const error = computed(() => walletState.value.error)
+  const isReady = computed(() => !initializing.value)
+  const isConnected = computed(() => state.value.isConnected)
+  const isConnecting = computed(() => state.value.isConnecting)
+  const address = computed(() => state.value.address)
+  const provider = computed(() => state.value.provider)
+  const network = computed(() => state.value.network)
+  const networkIcon = computed(() => state.value.networkIcon)
+  const balance = computed(() => state.value.balance)
+  const chainId = computed(() => state.value.chainId)
+  const error = computed(() => state.value.error)
 
   const providerIcon = computed(() => {
-    if (!walletState.value.provider) return null
-    return PROVIDER_ICONS[walletState.value.provider] || null
+    if (!state.value.provider) return null
+    return PROVIDER_ICONS[state.value.provider] || null
   })
 
   const trimmedAddress = computed(() => {
-    if (!walletState.value.address) return ''
-    const addr = walletState.value.address
+    if (!state.value.address) return ''
+    const addr = state.value.address
     return `${addr.slice(0, 6)}...${addr.slice(-4)}`
   })
 
   const isCorrectNetwork = computed(() => {
-    return walletState.value.chainId === defaultChain.id
+    return state.value.chainId === defaultChain.id
   })
 
-  // Try to reconnect on mount if previously connected
+  // Track component instances for proper cleanup
   onMounted(async () => {
+    componentInstanceCount++
+
+    // Only initialize on first mount
+    if (componentInstanceCount > 1) {
+      return
+    }
+
     if (typeof window === 'undefined') {
       isInitializing.value = false
       return
@@ -529,10 +592,20 @@ export function useWallet() {
         await applyConnection(providerId, accounts, chainId, { shouldSwitchNetwork: false })
       }
     } catch (error) {
-      console.error('Failed to check existing connection:', error)
+      logError('Failed to check existing connection:', error)
     } finally {
       // Mark initialization as complete
       isInitializing.value = false
+    }
+  })
+
+  // Clean up on last component unmount
+  onUnmounted(() => {
+    componentInstanceCount--
+
+    // Only clean up listeners when no components are using the wallet
+    if (componentInstanceCount === 0 && listenersAttached) {
+      removeProviderListeners()
     }
   })
 

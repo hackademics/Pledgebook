@@ -1,17 +1,12 @@
 import { z } from 'zod'
+import { walletAddressSchema, coerceNumber } from '../shared.schema'
+
+export { walletAddressSchema }
 
 // =============================================================================
 // USER DOMAIN SCHEMAS
 // Purpose: Zod validation schemas for User entity (wallet-only auth)
 // =============================================================================
-
-/**
- * Ethereum wallet address validation (0x + 40 hex chars)
- */
-export const walletAddressSchema = z
-  .string()
-  .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum wallet address')
-  .transform((val) => val.toLowerCase()) // Normalize to lowercase
 
 /**
  * User role validation
@@ -132,15 +127,6 @@ export const adminUpdateUserSchema = updateUserSchema.extend({
   isBanned: z.boolean().optional(),
   banReason: z.string().max(500).nullable().optional(),
 })
-
-/**
- * Coerce string to number with undefined fallback
- */
-const coerceNumber = (defaultValue: number) =>
-  z.preprocess(
-    (val) => (val === undefined || val === '' ? defaultValue : Number(val)),
-    z.number().int(),
-  )
 
 /**
  * Query parameters for listing users

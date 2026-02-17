@@ -259,7 +259,7 @@ export function useUserSettings() {
         isFetched.value = true
       }
     } catch (error) {
-      console.error('Failed to fetch user settings:', error)
+      if (import.meta.dev) console.error('Failed to fetch user settings:', error)
       fetchError.value = error instanceof Error ? error.message : 'Failed to load settings'
     } finally {
       isLoading.value = false
@@ -322,7 +322,7 @@ export function useUserSettings() {
         return false
       }
     } catch (error) {
-      console.error('Failed to save settings:', error)
+      if (import.meta.dev) console.error('Failed to save settings:', error)
       saveError.value = error instanceof Error ? error.message : 'Failed to save settings'
       return false
     } finally {

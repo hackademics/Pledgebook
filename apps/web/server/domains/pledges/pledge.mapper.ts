@@ -1,4 +1,5 @@
 import type { Pledge, PledgeResponse, PledgeSummary } from './pledge.schema'
+import { formatEther } from 'viem'
 
 // =============================================================================
 // PLEDGE MAPPER
@@ -70,7 +71,5 @@ export function toPledgeSummaryList(rows: Pledge[]): PledgeSummary[] {
  * Format pledge amount for display (wei to ETH)
  */
 export function formatPledgeAmount(weiAmount: string, decimals = 4): string {
-  const wei = BigInt(weiAmount)
-  const eth = Number(wei) / 1e18
-  return eth.toFixed(decimals)
+  return Number(formatEther(BigInt(weiAmount))).toFixed(decimals)
 }

@@ -1,4 +1,5 @@
 import type { Disputer, DisputerResponse, DisputerSummary, EvidenceItem } from './disputer.schema'
+import { formatEther } from 'viem'
 
 // =============================================================================
 // DISPUTER MAPPER
@@ -20,10 +21,11 @@ function parseEvidence(evidence: string | EvidenceItem[]): EvidenceItem[] {
 /**
  * Maps a database row to the full API response format
  */
-export function toDisputerResponse(row: Disputer): DisputerResponse {
+export function toDisputerResponse(row: Disputer, campaignSlug?: string): DisputerResponse {
   return {
     id: row.disputer_id,
     campaignId: row.campaign_id,
+    ...(campaignSlug ? { campaignSlug } : {}),
     disputerAddress: row.disputer_address,
     amount: row.amount,
     status: row.status,
@@ -50,10 +52,11 @@ export function toDisputerResponse(row: Disputer): DisputerResponse {
 /**
  * Maps a database row to summary format (for list views)
  */
-export function toDisputerSummary(row: Disputer): DisputerSummary {
+export function toDisputerSummary(row: Disputer, campaignSlug?: string): DisputerSummary {
   return {
     id: row.disputer_id,
     campaignId: row.campaign_id,
+    ...(campaignSlug ? { campaignSlug } : {}),
     disputerAddress: row.disputer_address,
     amount: row.amount,
     status: row.status,
@@ -81,9 +84,7 @@ export function toDisputerSummaryList(rows: Disputer[]): DisputerSummary[] {
  * Format disputer amount for display (wei to ETH)
  */
 export function formatDisputerAmount(weiAmount: string, decimals = 4): string {
-  const wei = BigInt(weiAmount)
-  const eth = Number(wei) / 1e18
-  return eth.toFixed(decimals)
+  return Number(formatEther(BigInt(weiAmount))).toFixed(decimals)
 }
 
 /**

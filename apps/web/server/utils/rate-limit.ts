@@ -2,6 +2,9 @@ import type { H3Event } from 'h3'
 import { getHeader, getRequestIP } from 'h3'
 import { useCloudflareOptional } from './cloudflare'
 import { ApiErrorCode, createApiError } from './errors'
+import { createLogger } from './logger'
+
+const logger = createLogger('RateLimit')
 
 export interface RateLimitOptions {
   keyPrefix: string
@@ -24,7 +27,7 @@ export async function enforceRateLimit(event: H3Event, options: RateLimitOptions
   if (!kv) {
     // In production, log a warning if rate limiting is unavailable
     if (!import.meta.dev) {
-      console.warn('[Security] Rate limiting KV not available - requests are not rate limited')
+      logger.warn('Rate limiting KV not available - requests are not rate limited')
     }
     return
   }

@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+patchedDependencies:
+  nitro-cloudflare-dev@0.2.2:
+    hash: dc822089ad2166b07e858abd700356cc8b3308c8be79a400c509cea474f816e5
+    path: patches/nitro-cloudflare-dev@0.2.2.patch
+
 importers:
 
   .:
@@ -146,7 +151,7 @@ importers:
         version: 18.0.1
       nitro-cloudflare-dev:
         specifier: ^0.2.2
-        version: 0.2.2
+        version: 0.2.2(patch_hash=dc822089ad2166b07e858abd700356cc8b3308c8be79a400c509cea474f816e5)
       rimraf:
         specifier: ^6.0.1
         version: 6.1.2
@@ -15742,7 +15747,7 @@ snapshots:
 
   neo-async@2.6.2: {}
 
-  nitro-cloudflare-dev@0.2.2:
+  nitro-cloudflare-dev@0.2.2(patch_hash=dc822089ad2166b07e858abd700356cc8b3308c8be79a400c509cea474f816e5):
     dependencies:
       consola: 3.4.2
       mlly: 1.8.0

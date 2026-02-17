@@ -2,6 +2,7 @@ import { defineEventHandler } from 'h3'
 import { useCloudflare } from '../../utils/cloudflare'
 import { handleError } from '../../utils/errors'
 import { sendSuccess } from '../../utils/response'
+import { requireAdmin } from '../../utils/admin'
 import { createDisputerRepository, createDisputerService } from '../../domains/disputers'
 
 /**
@@ -14,7 +15,8 @@ export default defineEventHandler(async (event) => {
   try {
     const { DB } = useCloudflare(event)
 
-    // TODO: Verify caller has admin/verifier role
+    // Require admin/verifier role - throws if not authorized
+    requireAdmin(event)
 
     // Initialize repository and service
     const repository = createDisputerRepository(DB)

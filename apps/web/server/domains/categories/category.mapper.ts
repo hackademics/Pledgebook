@@ -12,6 +12,7 @@ import type { Category, CategoryResponse } from './category.schema'
 export function toCategoryResponse(row: Category): CategoryResponse {
   return {
     id: row.category_id,
+    slug: row.category_id,
     name: row.name,
     description: row.description ?? null,
     icon: row.icon ?? null,

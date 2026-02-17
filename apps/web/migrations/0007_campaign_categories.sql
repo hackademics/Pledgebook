@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS categories (
     
     -- Color code (hex)
     color TEXT 
-        CHECK (color IS NULL OR color GLOB '#[a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9]'),
+        CHECK (color IS NULL OR (length(color) = 7 AND color LIKE '#%')),
     
     -- Parent category for hierarchical categories (optional)
     parent_category_id TEXT,

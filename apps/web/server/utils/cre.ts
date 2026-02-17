@@ -4,6 +4,9 @@ import { useRuntimeConfig } from '#imports'
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { useCloudflareOptional } from './cloudflare'
 import { ApiErrorCode, createApiError } from './errors'
+import { createLogger } from './logger'
+
+const logger = createLogger('CRE')
 
 /**
  * Verify that a CRE webhook request is authentic.
@@ -37,7 +40,7 @@ export async function verifyCREWebhook(event: H3Event, body: string): Promise<vo
   if (!creWebhookSecret) {
     // In development, allow bypass if secret not configured
     if (import.meta.dev) {
-      console.warn('[CRE] Webhook secret not configured, skipping verification in dev mode')
+      logger.warn('Webhook secret not configured, skipping verification in dev mode')
       return
     }
     throw createApiError(ApiErrorCode.SERVICE_UNAVAILABLE, 'CRE webhook secret not configured')

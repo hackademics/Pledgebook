@@ -1,4 +1,5 @@
 import type { Voucher, VoucherResponse, VoucherSummary } from './voucher.schema'
+import { formatEther } from 'viem'
 
 // =============================================================================
 // VOUCHER MAPPER
@@ -8,10 +9,11 @@ import type { Voucher, VoucherResponse, VoucherSummary } from './voucher.schema'
 /**
  * Maps a database row to the full API response format
  */
-export function toVoucherResponse(row: Voucher): VoucherResponse {
+export function toVoucherResponse(row: Voucher, campaignSlug?: string): VoucherResponse {
   return {
     id: row.voucher_id,
     campaignId: row.campaign_id,
+    ...(campaignSlug ? { campaignSlug } : {}),
     voucherAddress: row.voucher_address,
     amount: row.amount,
     status: row.status,
@@ -38,10 +40,11 @@ export function toVoucherResponse(row: Voucher): VoucherResponse {
 /**
  * Maps a database row to summary format (for list views)
  */
-export function toVoucherSummary(row: Voucher): VoucherSummary {
+export function toVoucherSummary(row: Voucher, campaignSlug?: string): VoucherSummary {
   return {
     id: row.voucher_id,
     campaignId: row.campaign_id,
+    ...(campaignSlug ? { campaignSlug } : {}),
     voucherAddress: row.voucher_address,
     amount: row.amount,
     status: row.status,
@@ -68,7 +71,5 @@ export function toVoucherSummaryList(rows: Voucher[]): VoucherSummary[] {
  * Format voucher amount for display (wei to ETH)
  */
 export function formatVoucherAmount(weiAmount: string, decimals = 4): string {
-  const wei = BigInt(weiAmount)
-  const eth = Number(wei) / 1e18
-  return eth.toFixed(decimals)
+  return Number(formatEther(BigInt(weiAmount))).toFixed(decimals)
 }

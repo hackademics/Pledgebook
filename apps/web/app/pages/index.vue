@@ -1,59 +1,147 @@
 <template>
   <div class="home-page">
-    <!-- Hero Section -->
+    <!-- Hero Section — Narrative Flow -->
     <section class="hero-section">
+      <div
+        class="hero-glow"
+        aria-hidden="true"
+      ></div>
       <div class="container-app">
-        <div class="hero-content">
-          <div class="hero-badge">
-            <Icon
-              name="heroicons:sparkles"
-              class="hero-badge-icon"
-            />
-            <span>Trusted by 10,000+ community members</span>
-          </div>
-          <h1 class="hero-title">
-            Make Pledges.<br />
-            <span class="hero-title-accent">Build Trust.</span>
+        <!-- The Hook -->
+        <div class="hero-hook">
+          <h1 class="hero-headline">
+            Turn Promises into Proof.<br />
+            <span class="hero-headline-accent">Fund Verified Results.</span>
           </h1>
-          <p class="hero-description">
-            The decentralized platform where communities create transparent pledges, vouchers
-            validate commitments, and everyone stays accountable.
+          <p class="hero-subline">
+            Pledgebook uses blockchain verification to ensure donated funds are unlocked only when
+            goals are proven complete — accountability that rewards execution.
           </p>
-          <div class="hero-actions">
-            <NuxtLink
-              to="/campaigns"
-              class="btn btn-primary hero-btn"
-            >
+        </div>
+
+        <!-- The Value Flow -->
+        <div class="value-flow">
+          <div class="flow-card">
+            <div class="flow-card-number">01</div>
+            <div class="flow-card-icon-wrap">
               <Icon
-                name="heroicons:rocket-launch"
-                class="btn-icon"
+                name="heroicons:fire"
+                class="flow-card-icon"
               />
-              Explore Campaigns
-            </NuxtLink>
-            <NuxtLink
-              to="/how-it-works"
-              class="btn btn-secondary hero-btn"
-            >
-              How It Works
-            </NuxtLink>
+            </div>
+            <h3 class="flow-card-title">Set Ambitious Goals</h3>
+            <p class="flow-card-desc">
+              Individuals define measurable goals they're committed to achieving — fitness,
+              education, career, community impact.
+            </p>
+            <span class="flow-card-role">For Achievers</span>
           </div>
 
-          <!-- Stats -->
-          <div class="hero-stats">
-            <div class="stat-item">
-              <span class="stat-value">$2.5M+</span>
-              <span class="stat-label">Total Pledged</span>
+          <div
+            class="flow-connector"
+            aria-hidden="true"
+          >
+            <Icon
+              name="heroicons:arrow-long-right"
+              class="flow-connector-icon flow-connector-h"
+            />
+            <Icon
+              name="heroicons:arrow-long-down"
+              class="flow-connector-icon flow-connector-v"
+            />
+          </div>
+
+          <div class="flow-card flow-card-center">
+            <div class="flow-card-number">02</div>
+            <div class="flow-card-icon-wrap flow-card-icon-accent">
+              <Icon
+                name="heroicons:shield-check"
+                class="flow-card-icon"
+              />
             </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-value">1,234</span>
-              <span class="stat-label">Active Campaigns</span>
+            <h3 class="flow-card-title">Verify On-Chain</h3>
+            <p class="flow-card-desc">
+              Blockchain-powered verification provides undeniable proof that goals were completed —
+              no disputes, no ambiguity.
+            </p>
+            <span class="flow-card-role flow-card-role-accent">The Trust Layer</span>
+          </div>
+
+          <div
+            class="flow-connector"
+            aria-hidden="true"
+          >
+            <Icon
+              name="heroicons:arrow-long-right"
+              class="flow-connector-icon flow-connector-h"
+            />
+            <Icon
+              name="heroicons:arrow-long-down"
+              class="flow-connector-icon flow-connector-v"
+            />
+          </div>
+
+          <div class="flow-card">
+            <div class="flow-card-number">03</div>
+            <div class="flow-card-icon-wrap">
+              <Icon
+                name="heroicons:banknotes"
+                class="flow-card-icon"
+              />
             </div>
-            <div class="stat-divider"></div>
-            <div class="stat-item">
-              <span class="stat-value">98.5%</span>
-              <span class="stat-label">Success Rate</span>
-            </div>
+            <h3 class="flow-card-title">Unlock Funding</h3>
+            <p class="flow-card-desc">
+              Donated funds are released only when verified results are delivered — donors invest in
+              outcomes, not promises.
+            </p>
+            <span class="flow-card-role">For Donors</span>
+          </div>
+        </div>
+
+        <!-- Reinforcement -->
+        <div class="hero-reinforce">
+          <Icon
+            name="heroicons:lock-closed"
+            class="reinforce-icon"
+          />
+          <span>Donors fund with confidence. Achievers earn through execution.</span>
+        </div>
+
+        <!-- CTAs -->
+        <div class="hero-actions">
+          <NuxtLink
+            to="/campaigns"
+            class="btn btn-primary hero-btn"
+          >
+            <Icon
+              name="heroicons:rocket-launch"
+              class="btn-icon"
+            />
+            Explore Campaigns
+          </NuxtLink>
+          <NuxtLink
+            to="/how-it-works"
+            class="btn btn-secondary hero-btn"
+          >
+            How It Works
+          </NuxtLink>
+        </div>
+
+        <!-- Stats -->
+        <div class="hero-stats">
+          <div class="stat-item">
+            <span class="stat-value">$2.5M+</span>
+            <span class="stat-label">Funded Through Results</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-value">1,234</span>
+            <span class="stat-label">Active Campaigns</span>
+          </div>
+          <div class="stat-divider"></div>
+          <div class="stat-item">
+            <span class="stat-value">98.5%</span>
+            <span class="stat-label">Goal Completion Rate</span>
           </div>
         </div>
       </div>
@@ -78,9 +166,10 @@
 
         <!-- Campaign Cards Grid -->
         <div class="campaigns-grid">
-          <article
+          <NuxtLink
             v-for="campaign in featuredCampaigns"
             :key="campaign.id"
+            :to="`/@${campaign.slug}`"
             class="campaign-card"
           >
             <div class="campaign-header">
@@ -123,7 +212,7 @@
                 <span>{{ campaign.daysLeft }} days left</span>
               </div>
             </div>
-          </article>
+          </NuxtLink>
         </div>
       </div>
     </section>
@@ -231,110 +320,119 @@
 <script setup lang="ts">
 // SEO Meta
 useSeoMeta({
-  title: 'Pledgebook - Make Pledges. Build Trust.',
+  title: 'Pledgebook — Turn Promises into Proof. Fund Verified Results.',
   description:
-    'The decentralized platform where communities create transparent pledges, vouchers validate commitments, and everyone stays accountable.',
+    'Pledgebook uses blockchain verification to ensure donated funds are unlocked only when goals are proven complete. Accountability that rewards execution.',
 })
 
-// Mock featured campaigns data
-const featuredCampaigns = [
-  {
-    id: '1',
-    title: 'Community Garden Initiative',
-    description: 'Transform vacant lots into thriving community gardens across the city.',
-    category: 'Environment',
-    status: 'Active',
-    pledged: 45000,
-    progress: 75,
-    vouchers: 156,
-    daysLeft: 14,
-  },
-  {
-    id: '2',
-    title: 'Youth Tech Education Fund',
-    description: 'Provide coding bootcamps and mentorship for underserved youth.',
-    category: 'Education',
-    status: 'Active',
-    pledged: 28500,
-    progress: 57,
-    vouchers: 89,
-    daysLeft: 21,
-  },
-  {
-    id: '3',
-    title: 'Local Food Bank Expansion',
-    description: 'Expand food bank capacity to serve 500 more families weekly.',
-    category: 'Social',
-    status: 'Active',
-    pledged: 62000,
-    progress: 88,
-    vouchers: 234,
-    daysLeft: 7,
-  },
-  {
-    id: '4',
-    title: 'Clean Water Access Project',
-    description: 'Install water filtration systems in rural communities.',
-    category: 'Health',
-    status: 'Active',
-    pledged: 18750,
-    progress: 42,
-    vouchers: 67,
-    daysLeft: 30,
-  },
-]
+// Fetch featured campaigns from API
+const { data: featuredResponse } = await useAsyncData('featured-campaigns', () =>
+  $fetch<{
+    success: boolean
+    data: Array<{
+      id: string
+      name: string
+      purpose?: string
+      description?: string
+      category?: string
+      categories?: string[]
+      status: string
+      amountPledged?: string
+      fundraisingGoal?: string
+      voucherCount?: number
+      pledgeCount?: number
+      endDate?: string
+      slug: string
+    }>
+  }>('/api/campaigns/featured'),
+)
 
-// Categories data
-const categories = [
-  {
-    id: 'environment',
-    name: 'Environment',
-    slug: 'environment',
-    icon: 'heroicons:globe-alt',
-    color: '#10b981',
-    count: 234,
-  },
-  {
-    id: 'education',
-    name: 'Education',
-    slug: 'education',
-    icon: 'heroicons:academic-cap',
-    color: '#6366f1',
-    count: 189,
-  },
-  {
-    id: 'health',
-    name: 'Health',
-    slug: 'health',
-    icon: 'heroicons:heart',
-    color: '#ef4444',
-    count: 156,
-  },
-  {
-    id: 'technology',
-    name: 'Technology',
-    slug: 'technology',
-    icon: 'heroicons:cpu-chip',
-    color: '#3b82f6',
-    count: 312,
-  },
-  {
-    id: 'social',
-    name: 'Social Impact',
-    slug: 'social',
-    icon: 'heroicons:users',
-    color: '#f59e0b',
-    count: 278,
-  },
-  {
-    id: 'arts',
-    name: 'Arts & Culture',
-    slug: 'arts',
-    icon: 'heroicons:paint-brush',
-    color: '#ec4899',
-    count: 145,
-  },
-]
+const featuredCampaigns = computed(() => {
+  const campaigns = featuredResponse.value?.data ?? []
+  return campaigns.map((c) => {
+    const pledged = Number(c.amountPledged ?? 0) / 1e6 // wei to USDC
+    const goal = Number(c.fundraisingGoal ?? 1) / 1e6
+    const progress = goal > 0 ? Math.min(Math.round((pledged / goal) * 100), 100) : 0
+    const daysLeft = c.endDate
+      ? Math.max(0, Math.ceil((new Date(c.endDate).getTime() - Date.now()) / 86400000))
+      : 0
+    return {
+      id: c.id,
+      title: c.name,
+      description: c.description ?? c.purpose ?? '',
+      category: c.category ?? 'General',
+      status: c.status ?? 'Active',
+      pledged: Math.round(pledged),
+      progress,
+      vouchers: c.voucherCount ?? 0,
+      daysLeft,
+      slug: c.slug,
+    }
+  })
+})
+
+// Fetch categories from API
+const { data: categoriesResponse } = await useAsyncData('home-categories', () =>
+  $fetch<{
+    success: boolean
+    data: Array<{
+      id: string
+      name: string
+      slug: string
+      icon?: string
+      color?: string
+      campaignCount?: number
+    }>
+  }>('/api/categories', {
+    params: { isActive: true, limit: 6, sortBy: 'campaign_count', sortOrder: 'desc' },
+  }),
+)
+
+const CATEGORY_ICONS: Record<string, string> = {
+  'personal-fitness': 'heroicons:heart',
+  'sustainable-living': 'heroicons:globe-alt',
+  'startup-launch': 'heroicons:rocket-launch',
+  'nonprofit-fundraising': 'heroicons:hand-raised',
+  'mental-health-support': 'heroicons:sparkles',
+  'tree-planting': 'heroicons:globe-alt',
+  'renewable-energy': 'heroicons:bolt',
+  'community-projects': 'heroicons:user-group',
+  'education-funding': 'heroicons:academic-cap',
+  'scientific-research': 'heroicons:beaker',
+  'shelter-housing': 'heroicons:home',
+  'food-security': 'heroicons:cake',
+  'animal-rescue': 'heroicons:heart',
+  'environmental-cleanup': 'heroicons:globe-alt',
+}
+
+const CATEGORY_COLORS: Record<string, string> = {
+  'personal-fitness': '#ef4444',
+  'sustainable-living': '#10b981',
+  'startup-launch': '#6366f1',
+  'nonprofit-fundraising': '#f59e0b',
+  'mental-health-support': '#ec4899',
+  'tree-planting': '#22c55e',
+  'renewable-energy': '#3b82f6',
+  'community-projects': '#8b5cf6',
+  'education-funding': '#6366f1',
+  'scientific-research': '#0ea5e9',
+  'shelter-housing': '#f97316',
+  'food-security': '#84cc16',
+  'animal-rescue': '#f43f5e',
+  'environmental-cleanup': '#14b8a6',
+}
+
+const categories = computed(() => {
+  const cats = categoriesResponse.value?.data ?? []
+  return cats.map((c) => ({
+    id: c.id,
+    name: c.name,
+    slug: c.slug,
+    icon: c.icon || CATEGORY_ICONS[c.slug] || 'heroicons:tag',
+    color: c.color || CATEGORY_COLORS[c.slug] || '#6366f1',
+    count: c.campaignCount ?? 0,
+  }))
+})
 
 // How it works steps
 const steps = [
@@ -377,83 +475,282 @@ const steps = [
   }
 }
 
-/* Hero Section */
+/* Hero Section — Narrative Flow */
 .hero-section {
+  position: relative;
   padding: 3rem 0 2rem;
+  overflow: hidden;
 }
 
 @media (min-width: 1024px) {
   .hero-section {
-    padding: 4rem 0 3rem;
+    padding: 4.5rem 0 3rem;
   }
 }
 
-.hero-content {
-  max-width: 42rem;
-  margin: 0 auto;
+/* Background glow effect */
+.hero-glow {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 80%;
+  height: 70%;
+  background:
+    radial-gradient(
+      ellipse at 30% 50%,
+      color-mix(in oklch, var(--interactive-primary) 8%, transparent) 0%,
+      transparent 70%
+    ),
+    radial-gradient(
+      ellipse at 70% 50%,
+      color-mix(in oklch, var(--color-accent-400, oklch(0.68 0.18 195)) 6%, transparent) 0%,
+      transparent 70%
+    );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero-section .container-app {
+  position: relative;
+  z-index: 1;
+}
+
+/* The Hook */
+.hero-hook {
   text-align: center;
+  max-width: 52rem;
+  margin: 0 auto 3rem;
 }
 
-.hero-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 0.5rem 0.875rem;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--interactive-primary);
-  background-color: color-mix(in oklch, var(--interactive-primary) 10%, transparent);
-  border-radius: 9999px;
-  margin-bottom: 1.5rem;
-}
-
-.hero-badge-icon {
-  width: 1rem;
-  height: 1rem;
-}
-
-.hero-title {
-  font-size: 2.5rem;
+.hero-headline {
+  font-size: 2.25rem;
   font-weight: 800;
   line-height: 1.1;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.03em;
   color: var(--text-primary);
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.25rem;
 }
 
 @media (min-width: 640px) {
-  .hero-title {
-    font-size: 3.5rem;
+  .hero-headline {
+    font-size: 3.25rem;
   }
 }
 
 @media (min-width: 1024px) {
-  .hero-title {
+  .hero-headline {
     font-size: 4rem;
   }
 }
 
-.hero-title-accent {
+.hero-headline-accent {
   background: linear-gradient(
     135deg,
     var(--interactive-primary) 0%,
-    var(--interactive-primary-hover) 100%
+    var(--color-accent-400, oklch(0.68 0.18 195)) 100%
   );
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-.hero-description {
-  font-size: 1.125rem;
-  line-height: 1.75;
+.hero-subline {
+  font-size: 1.0625rem;
+  line-height: 1.7;
   color: var(--text-secondary);
-  margin-bottom: 2rem;
-  max-width: 36rem;
-  margin-left: auto;
-  margin-right: auto;
+  max-width: 40rem;
+  margin: 0 auto;
 }
 
+@media (min-width: 640px) {
+  .hero-subline {
+    font-size: 1.125rem;
+  }
+}
+
+/* Value Flow — 3-card visual narrative */
+.value-flow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2.5rem;
+}
+
+@media (min-width: 768px) {
+  .value-flow {
+    flex-direction: row;
+    align-items: stretch;
+    gap: 0;
+  }
+}
+
+/* Flow Cards */
+.flow-card {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 1.5rem 1.5rem;
+  background-color: var(--surface-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 0.75rem;
+  transition:
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.flow-card:hover {
+  border-color: var(--border-hover);
+  box-shadow: var(--shadow-md);
+}
+
+/* Center card (The Trust Layer) gets visual emphasis */
+.flow-card-center {
+  border-color: color-mix(in oklch, var(--interactive-primary) 40%, var(--border-primary));
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklch, var(--interactive-primary) 4%, var(--surface-primary)) 0%,
+    var(--surface-primary) 100%
+  );
+}
+
+.flow-card-center:hover {
+  border-color: var(--interactive-primary);
+  box-shadow: 0 8px 24px -4px color-mix(in oklch, var(--interactive-primary) 15%, transparent);
+}
+
+.flow-card-number {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+
+.flow-card-icon-wrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  background-color: color-mix(in oklch, var(--interactive-primary) 10%, transparent);
+  margin-bottom: 1rem;
+}
+
+.flow-card-icon-accent {
+  background-color: color-mix(in oklch, var(--interactive-primary) 15%, transparent);
+}
+
+.flow-card-icon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: var(--interactive-primary);
+}
+
+.flow-card-title {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.flow-card-desc {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--text-tertiary);
+  flex: 1;
+  margin-bottom: 1rem;
+}
+
+.flow-card-role {
+  display: inline-block;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--border-primary);
+  border-radius: 9999px;
+}
+
+.flow-card-role-accent {
+  color: var(--interactive-primary);
+  border-color: color-mix(in oklch, var(--interactive-primary) 30%, transparent);
+  background-color: color-mix(in oklch, var(--interactive-primary) 5%, transparent);
+}
+
+/* Flow Connectors */
+.flow-connector {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.flow-connector-icon {
+  color: var(--text-muted);
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+/* Mobile: vertical arrows; Desktop: horizontal */
+.flow-connector-h {
+  display: none;
+}
+
+.flow-connector-v {
+  display: block;
+}
+
+@media (min-width: 768px) {
+  .flow-connector {
+    width: 2.5rem;
+  }
+
+  .flow-connector-h {
+    display: block;
+  }
+
+  .flow-connector-v {
+    display: none;
+  }
+}
+
+/* Reinforcement pill */
+.hero-reinforce {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  margin: 0 auto 2rem;
+  max-width: fit-content;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: 9999px;
+}
+
+.reinforce-icon {
+  width: 1rem;
+  height: 1rem;
+  color: var(--interactive-primary);
+  flex-shrink: 0;
+}
+
+/* Hero Actions */
 .hero-actions {
   display: flex;
   flex-wrap: wrap;
@@ -489,6 +786,7 @@ const steps = [
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
+  text-align: center;
 }
 
 .stat-value {
@@ -505,7 +803,7 @@ const steps = [
 }
 
 .stat-label {
-  font-size: 0.8125rem;
+  font-size: 0.75rem;
   color: var(--text-tertiary);
 }
 

@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
     // Parse and validate request body
     const body = await parseBody(event, createDisputerSchema)
 
-    // TODO: Get disputer address from authenticated session
+    // Get disputer address from authenticated SIWE session (or header fallback in dev)
     const disputerAddress = requireWalletAddress(event)
 
     // Initialize repositories and service

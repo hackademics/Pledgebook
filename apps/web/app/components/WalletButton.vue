@@ -171,7 +171,7 @@ async function handleCopy() {
       showCopied.value = false
     }, 2000)
   } catch (error) {
-    console.error('Failed to copy:', error)
+    if (import.meta.dev) console.error('Failed to copy:', error)
   }
 }
 

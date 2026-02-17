@@ -37,7 +37,7 @@ export async function requireTurnstile(event: H3Event): Promise<void> {
 
   const ip = getHeader(event, 'cf-connecting-ip') || getHeader(event, 'x-forwarded-for')
   if (ip) {
-    body.append('remoteip', ip.split(',')[0].trim())
+    body.append('remoteip', ip.split(',')[0]?.trim() ?? ip.trim())
   }
 
   const response = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {

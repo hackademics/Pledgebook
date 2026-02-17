@@ -301,8 +301,10 @@ async function handleNewsletterSubmit() {
   subscriptionMessage.value = ''
 
   try {
-    // TODO: Implement actual newsletter subscription
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    await $fetch('/api/newsletter/subscribe', {
+      method: 'POST',
+      body: { email: email.value },
+    })
 
     subscriptionSuccess.value = true
     subscriptionMessage.value = 'Thanks for subscribing!'

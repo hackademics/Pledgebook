@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { coerceNumber } from '../shared.schema'
 
 // =============================================================================
 // CATEGORY DOMAIN SCHEMAS
@@ -71,6 +72,7 @@ export const categorySchema = z.object({
  */
 export const categoryResponseSchema = z.object({
   id: z.string(),
+  slug: z.string(),
   name: z.string(),
   description: z.string().nullable(),
   icon: z.string().nullable(),
@@ -112,15 +114,6 @@ export const updateCategorySchema = z.object({
   isActive: z.boolean().optional(),
   isFeatured: z.boolean().optional(),
 })
-
-/**
- * Coerce string to number with undefined fallback
- */
-const coerceNumber = (defaultValue: number) =>
-  z.preprocess(
-    (val) => (val === undefined || val === '' ? defaultValue : Number(val)),
-    z.number().int(),
-  )
 
 /**
  * Query parameters for listing categories

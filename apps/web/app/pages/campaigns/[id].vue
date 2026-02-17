@@ -347,20 +347,20 @@
     <!-- Vouch Modal -->
     <VouchModal
       v-if="campaign"
-      :show="showVouchModal"
+      v-model:visible="showVouchModal"
       :campaign-id="resolvedCampaignId"
-      :campaign-name="campaign.name"
-      @close="showVouchModal = false"
+      :campaign-title="campaign.name"
+      :campaign-slug="campaign.slug || ''"
       @success="handleVouchSuccess"
     />
 
     <!-- Dispute Modal -->
     <DisputeModal
       v-if="campaign"
-      :show="showDisputeModal"
+      v-model:visible="showDisputeModal"
       :campaign-id="resolvedCampaignId"
-      :campaign-name="campaign.name"
-      @close="showDisputeModal = false"
+      :campaign-title="campaign.name"
+      :campaign-slug="campaign.slug || ''"
       @success="handleDisputeSuccess"
     />
   </div>
@@ -368,6 +368,10 @@
 
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import type { CampaignResponse } from '~~/server/domains/campaigns'
+import type { PledgeSummary } from '~/types/pledge'
+import type { VoucherSummary } from '~/types/voucher'
+import type { DisputerSummary } from '~/types/disputer'
 import TurnstileWidget from '../../components/common/TurnstileWidget.vue'
 import EvidenceUploadCard from '../../components/evidence/EvidenceUploadCard.vue'
 import VouchModal from '../../components/VouchModal.vue'
@@ -392,7 +396,9 @@ const {
   refresh: refreshCampaign,
 } = useFetch(() => `/api/campaigns/${campaignId.value}`)
 
-const campaign = computed(() => campaignResponse.value?.data)
+const campaign = computed(
+  () => (campaignResponse.value as { data?: CampaignResponse } | null)?.data,
+)
 const resolvedCampaignId = computed(() => campaign.value?.id || campaignId.value)
 
 const { data: pledgesResponse, refresh: refreshPledges } = useFetch(
@@ -405,9 +411,20 @@ const { data: disputesResponse, refresh: refreshDisputes } = useFetch(
   () => `/api/campaigns/${resolvedCampaignId.value}/disputers?limit=5`,
 )
 
-const pledges = computed(() => pledgesResponse.value?.data || [])
-const vouchers = computed(() => vouchersResponse.value?.data || [])
-const disputes = computed(() => disputesResponse.value?.data || [])
+const pledges = computed(
+  () =>
+    ((pledgesResponse.value as { data?: PledgeSummary[] } | null)?.data || []) as PledgeSummary[],
+)
+const vouchers = computed(
+  () =>
+    ((vouchersResponse.value as { data?: VoucherSummary[] } | null)?.data ||
+      []) as VoucherSummary[],
+)
+const disputes = computed(
+  () =>
+    ((disputesResponse.value as { data?: DisputerSummary[] } | null)?.data ||
+      []) as DisputerSummary[],
+)
 
 const pledgeForm = ref({
   amount: '',

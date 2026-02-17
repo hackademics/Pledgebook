@@ -81,8 +81,9 @@ export function createCategoryRepository(db: D1Database): CategoryRepository {
       }
 
       if (search) {
-        conditions.push('(name LIKE ? OR description LIKE ?)')
-        const searchPattern = `%${search}%`
+        conditions.push('(name LIKE ? ESCAPE "\\" OR description LIKE ? ESCAPE "\\")')
+        const escapedSearch = search.replace(/[%_\\]/g, '\\$&')
+        const searchPattern = `%${escapedSearch}%`
         params.push(searchPattern, searchPattern)
       }
 

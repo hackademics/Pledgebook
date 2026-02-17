@@ -38,6 +38,7 @@ export interface EvidenceItem {
 export interface DisputerResponse {
   id: string
   campaignId: string
+  campaignSlug?: string
   disputerAddress: string
   amount: string
   status: DisputerStatus
@@ -75,6 +76,7 @@ export interface DisputerSummary {
   // Extended fields from join with campaigns
   campaignTitle?: string
   campaignStatus?: string
+  campaignSlug?: string
 }
 
 /**
@@ -216,29 +218,11 @@ export function getDisputeTypeConfig(type: DisputeType): DisputeTypeConfig {
   return configs[type]
 }
 
-/**
- * Format wei amount to human readable string
- */
-export function formatDisputerAmount(weiAmount: string, decimals = 2): string {
-  const wei = BigInt(weiAmount)
-  const usdc = Number(wei) / 1_000_000 // USDC has 6 decimals
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(usdc)
-}
-
-/**
- * Parse human readable amount to wei string
- */
-export function parseDisputerAmountToWei(amount: string): string {
-  const cleaned = amount.replace(/[^0-9.]/g, '')
-  const num = Number.parseFloat(cleaned) || 0
-  const wei = Math.floor(num * 1_000_000) // USDC has 6 decimals
-  return wei.toString()
-}
+// Re-export shared currency utilities for backwards compatibility
+export {
+  formatUsdcAmount as formatDisputerAmount,
+  parseUsdcToWei as parseDisputerAmountToWei,
+} from '~/utils/currency'
 
 /**
  * Check if dispute is in a final state

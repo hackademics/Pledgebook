@@ -13,20 +13,69 @@ export function useCategories() {
 
   /**
    * Default categories for initial render and fallback
+   * These match the featured categories from 0011_seed_categories.sql
    */
   const defaultCategories: Category[] = [
-    { id: 'politics', name: 'Politics', slug: 'politics', icon: 'heroicons:building-library' },
-    { id: 'sports', name: 'Sports', slug: 'sports', icon: 'heroicons:trophy' },
-    { id: 'crypto', name: 'Crypto', slug: 'crypto', icon: 'heroicons:currency-dollar' },
-    { id: 'finance', name: 'Finance', slug: 'finance', icon: 'heroicons:chart-bar' },
-    { id: 'geopolitics', name: 'Geopolitics', slug: 'geopolitics', icon: 'heroicons:globe-alt' },
-    { id: 'earnings', name: 'Earnings', slug: 'earnings', icon: 'heroicons:banknotes' },
-    { id: 'tech', name: 'Tech', slug: 'tech', icon: 'heroicons:cpu-chip' },
-    { id: 'culture', name: 'Culture', slug: 'culture', icon: 'heroicons:sparkles' },
-    { id: 'world', name: 'World', slug: 'world', icon: 'heroicons:globe-americas' },
-    { id: 'economy', name: 'Economy', slug: 'economy', icon: 'heroicons:presentation-chart-line' },
-    { id: 'climate', name: 'Climate & Science', slug: 'climate-science', icon: 'heroicons:beaker' },
-    { id: 'elections', name: 'Elections', slug: 'elections', icon: 'heroicons:hand-raised' },
+    {
+      id: 'personal-fitness',
+      name: 'Personal Fitness',
+      slug: 'personal-fitness',
+      icon: 'heroicons:heart',
+    },
+    {
+      id: 'sustainable-living',
+      name: 'Sustainable Living',
+      slug: 'sustainable-living',
+      icon: 'heroicons:globe-alt',
+    },
+    {
+      id: 'startup-launch',
+      name: 'Startup Launch',
+      slug: 'startup-launch',
+      icon: 'heroicons:rocket-launch',
+    },
+    {
+      id: 'nonprofit-fundraising',
+      name: 'Nonprofit Fundraising',
+      slug: 'nonprofit-fundraising',
+      icon: 'heroicons:hand-raised',
+    },
+    {
+      id: 'mental-health-support',
+      name: 'Mental Health',
+      slug: 'mental-health-support',
+      icon: 'heroicons:sparkles',
+    },
+    {
+      id: 'tree-planting',
+      name: 'Tree Planting',
+      slug: 'tree-planting',
+      icon: 'heroicons:globe-alt',
+    },
+    {
+      id: 'renewable-energy',
+      name: 'Renewable Energy',
+      slug: 'renewable-energy',
+      icon: 'heroicons:bolt',
+    },
+    {
+      id: 'community-projects',
+      name: 'Community Projects',
+      slug: 'community-projects',
+      icon: 'heroicons:user-group',
+    },
+    {
+      id: 'education-funding',
+      name: 'Education Funding',
+      slug: 'education-funding',
+      icon: 'heroicons:academic-cap',
+    },
+    {
+      id: 'scientific-research',
+      name: 'Scientific Research',
+      slug: 'scientific-research',
+      icon: 'heroicons:beaker',
+    },
   ]
 
   /**

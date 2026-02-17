@@ -147,7 +147,7 @@
               Campaign
             </h2>
             <NuxtLink
-              :to="`/campaigns/${dispute.campaignId}`"
+              :to="`/@${dispute.campaignSlug || dispute.campaignId}`"
               class="detail-card__campaign-link"
             >
               <div class="detail-card__campaign-icon">
@@ -339,7 +339,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useRoute, useAsyncData, useSeoMeta } from 'nuxt/app'
 import type { DisputerResponse, EvidenceItem, ResolutionOutcome } from '../../types/disputer'
 import {
@@ -349,6 +349,8 @@ import {
   getDisputerActions,
 } from '../../types/disputer'
 import { useDisputers } from '../../composables/useDisputers'
+import { PLEDGE_ESCROW_ABI } from '~/config/contracts'
+import type { Address } from 'viem'
 
 const route = useRoute()
 const disputeId = computed(() => route.params.id as string)
@@ -431,12 +433,119 @@ function getResolutionLabel(outcome: ResolutionOutcome): string {
   return labels[outcome]
 }
 
-function handleWithdraw() {
-  console.log('Withdraw dispute:', disputeId.value)
+const withdrawing = ref(false)
+const submittingEvidence = ref(false)
+const actionError = ref<string | null>(null)
+
+async function handleWithdraw() {
+  if (!dispute.value) return
+  const { address, isCorrectNetwork, switchToCorrectNetwork, getPublicClient, getWalletClient } =
+    useWallet()
+  if (!address.value) {
+    actionError.value = 'Please connect your wallet first.'
+    return
+  }
+  if (!isCorrectNetwork.value) {
+    const switched = await switchToCorrectNetwork()
+    if (!switched) {
+      actionError.value = 'Please switch to the correct network.'
+      return
+    }
+  }
+
+  withdrawing.value = true
+  actionError.value = null
+
+  try {
+    const api = useApi()
+    const campaignRes = await api.get<{ escrowAddress: string | null }>(
+      `/campaigns/${dispute.value.campaignId}`,
+    )
+    const escrowAddress = campaignRes.data?.escrowAddress
+    if (!escrowAddress) {
+      actionError.value = 'Campaign escrow address not found.'
+      return
+    }
+
+    const pc = getPublicClient()
+    const wc = getWalletClient()
+    if (!pc || !wc) {
+      actionError.value = 'Wallet client unavailable. Please reconnect.'
+      return
+    }
+
+    const txHash = await wc.writeContract({
+      address: escrowAddress as Address,
+      abi: PLEDGE_ESCROW_ABI,
+      functionName: 'claimDisputeStake',
+      args: [],
+      account: address.value,
+      chain: pc.chain,
+    })
+    await pc.waitForTransactionReceipt({ hash: txHash })
+
+    const { updateDispute } = useDisputers()
+    await updateDispute(dispute.value.id, { status: 'withdrawn' })
+  } catch (error: unknown) {
+    const err = error as { shortMessage?: string; message?: string }
+    actionError.value = err.shortMessage || err.message || 'Withdraw failed. Please try again.'
+  } finally {
+    withdrawing.value = false
+  }
 }
 
-function handleAddEvidence() {
-  console.log('Add evidence to dispute:', disputeId.value)
+async function handleAddEvidence() {
+  if (!dispute.value) return
+  submittingEvidence.value = true
+  actionError.value = null
+
+  try {
+    // Open a file picker and upload evidence
+    const input = document.createElement('input')
+    input.type = 'file'
+    input.accept = 'image/*,.pdf,.doc,.docx'
+
+    const file = await new Promise<File | null>((resolve) => {
+      input.onchange = () => resolve(input.files?.[0] ?? null)
+      input.click()
+    })
+
+    if (!file) {
+      submittingEvidence.value = false
+      return
+    }
+
+    const formData = new FormData()
+    formData.append('file', file)
+    formData.append('disputeId', dispute.value.id)
+
+    const response = await $fetch<{ success: boolean; data?: { url: string } }>(
+      '/api/upload/evidence',
+      {
+        method: 'POST',
+        body: formData,
+      },
+    )
+
+    if (response.success && response.data) {
+      const { updateDispute } = useDisputers()
+      await updateDispute(dispute.value.id, {
+        evidence: [
+          ...(dispute.value.evidence || []),
+          {
+            type: 'document' as const,
+            content: response.data.url,
+            submittedAt: new Date().toISOString(),
+          },
+        ],
+      } as Record<string, unknown>)
+    }
+  } catch (error: unknown) {
+    const err = error as { shortMessage?: string; message?: string }
+    actionError.value = err.shortMessage || err.message || 'Failed to add evidence.'
+  } finally {
+    submittingEvidence.value = false
+  }
 }
 
 useSeoMeta({

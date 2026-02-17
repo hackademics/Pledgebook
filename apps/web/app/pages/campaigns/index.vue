@@ -119,7 +119,7 @@
           <button
             type="button"
             class="btn btn-secondary"
-            @click="refresh"
+            @click="() => refresh()"
           >
             Try Again
           </button>
@@ -145,7 +145,7 @@
               </span>
             </div>
             <h3 class="campaign-title">
-              <NuxtLink :to="`/campaigns/${campaign.slug || campaign.id}`">
+              <NuxtLink :to="`/@${campaign.slug || campaign.id}`">
                 {{ campaign.name }}
               </NuxtLink>
             </h3>

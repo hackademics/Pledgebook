@@ -1,4 +1,4 @@
-import { defineEventHandler, getCookie, getHeader, setCookie } from 'h3'
+import { defineEventHandler, getCookie, setCookie } from 'h3'
 import { SiweMessage } from 'siwe'
 import { z } from 'zod'
 import { useRuntimeConfig } from '#imports'
@@ -25,13 +25,16 @@ export default defineEventHandler(async (event) => {
     const config = useRuntimeConfig(event)
     const publicAppUrl = config.public?.appUrl || ''
     const serverAppUrl = config.appUrl || ''
-    const fallbackOrigin = getHeader(event, 'origin') || ''
-    const fallbackHost = getHeader(event, 'host') || ''
-    const expectedOrigin =
-      publicAppUrl ||
-      serverAppUrl ||
-      fallbackOrigin ||
-      (fallbackHost ? `https://${fallbackHost}` : '')
+
+    // SECURITY: Never derive expected domain from request headers (attacker-controlled).
+    // If no trusted appUrl is configured, reject in production.
+    const expectedOrigin = publicAppUrl || serverAppUrl
+    if (!expectedOrigin && !import.meta.dev) {
+      throw createApiError(
+        ApiErrorCode.SERVICE_UNAVAILABLE,
+        'Application URL not configured — cannot verify SIWE domain',
+      )
+    }
     const expectedDomain = expectedOrigin ? new URL(expectedOrigin).host : ''
 
     const message = new SiweMessage(body.message)

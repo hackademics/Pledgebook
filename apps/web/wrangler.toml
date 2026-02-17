@@ -19,6 +19,7 @@ IPFS_GATEWAY_URL = "https://gateway.pinata.cloud/ipfs/"
 MIN_CONFIDENCE_THRESHOLD = "0.8"
 NUXT_PUBLIC_ADMIN_WALLET_ALLOWLIST = "0x9bedbe969028d7fabc6c9ccb8c9f05ec1b70d35f"
 NUXT_ADMIN_WALLET_ALLOWLIST = "0x9bedbe969028d7fabc6c9ccb8c9f05ec1b70d35f"
+NUXT_API_SECRET = "dev-secret-pledgebook-local-development-key-32chars"
 
 # ---------------------------------------------------------------------------
 # Smart Placement – Run Workers closer to backend services (D1, R2)

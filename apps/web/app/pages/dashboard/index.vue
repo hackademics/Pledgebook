@@ -278,7 +278,7 @@
                   >
                     <div class="dashboard-list-content">
                       <NuxtLink
-                        :to="`/campaigns/${campaign.slug || campaign.id}`"
+                        :to="`/@${campaign.slug || campaign.id}`"
                         class="dashboard-list-title"
                       >
                         {{ campaign.name }}
@@ -560,7 +560,7 @@
                       </span>
                     </div>
                     <NuxtLink
-                      :to="`/campaigns/${campaign.slug || campaign.id}`"
+                      :to="`/@${campaign.slug || campaign.id}`"
                       class="sidebar-deadline-link"
                     >
                       View

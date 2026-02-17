@@ -5,7 +5,7 @@ describe('useCategories', () => {
   const originalFetch = globalThis.$fetch
 
   beforeEach(() => {
-    globalThis.$fetch = vi.fn()
+    globalThis.$fetch = vi.fn() as unknown as typeof $fetch
   })
 
   afterEach(() => {
@@ -13,7 +13,9 @@ describe('useCategories', () => {
   })
 
   it('falls back to default categories on error', async () => {
-    globalThis.$fetch = vi.fn().mockRejectedValue(new Error('Network error'))
+    globalThis.$fetch = vi
+      .fn()
+      .mockRejectedValue(new Error('Network error')) as unknown as typeof $fetch
 
     const { fetchCategories, categories, defaultCategories, error, loading } = useCategories()
 
@@ -38,7 +40,7 @@ describe('useCategories', () => {
           isActive: true,
         },
       ],
-    })
+    }) as unknown as typeof $fetch
 
     const { fetchCategories, categories } = useCategories()
 

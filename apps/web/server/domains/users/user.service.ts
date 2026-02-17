@@ -195,20 +195,21 @@ export function createUserService(repository: UserRepository): UserService {
         return toUserResponse(user)
       }
 
-      // Update last login
-      await repository.updateLastLogin(address)
+      // Check if banned BEFORE recording login activity
       const user = await repository.findByAddress(address)
 
       if (!user) {
         throw createApiError(ApiErrorCode.INTERNAL_ERROR, 'Failed to record login')
       }
 
-      // Check if banned
       if (user.is_banned) {
         throw createApiError(ApiErrorCode.FORBIDDEN, 'Account is banned', {
           reason: user.ban_reason,
         })
       }
+
+      // Only update last login for non-banned users
+      await repository.updateLastLogin(address)
 
       return toUserResponse(user)
     },

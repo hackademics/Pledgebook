@@ -14,7 +14,7 @@ DROP TABLE IF EXISTS users;
 CREATE TABLE IF NOT EXISTS users (
     -- Primary identity: Ethereum wallet address (0x + 40 hex chars)
     address TEXT PRIMARY KEY 
-        CHECK (address GLOB '0x[a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9][a-fA-F0-9]'),
+        CHECK (length(address) = 42 AND address LIKE '0x%'),
     
     -- User role with constrained values
     role TEXT NOT NULL DEFAULT 'user' 

@@ -1,6 +1,6 @@
 import { computed, ref } from 'vue'
 import { SiweMessage } from 'siwe'
-import type { Address, WalletClient } from 'viem'
+import { getAddress, type Address, type WalletClient } from 'viem'
 import type { ApiResponse } from '~/types'
 
 type SiweSessionResponse = {
@@ -32,7 +32,7 @@ export function useSiwe() {
         return true
       }
     } catch (err) {
-      console.error('SIWE session check failed:', err)
+      if (import.meta.dev) console.error('SIWE session check failed:', err)
     }
 
     sessionAddress.value = null
@@ -57,7 +57,7 @@ export function useSiwe() {
 
       const message = new SiweMessage({
         domain: window.location.host,
-        address: options.address,
+        address: getAddress(options.address),
         statement: options.statement || 'Sign in to Pledgebook.',
         uri: window.location.origin,
         version: '1',
@@ -67,8 +67,9 @@ export function useSiwe() {
       })
 
       const preparedMessage = message.prepareMessage()
+      const checksummedAddress = getAddress(options.address)
       const signature = await options.walletClient.signMessage({
-        account: options.address,
+        account: checksummedAddress,
         message: preparedMessage,
       })
 
@@ -92,7 +93,7 @@ export function useSiwe() {
     } catch (err) {
       const message = err instanceof Error ? err.message : 'SIWE sign-in failed'
       error.value = message
-      console.error('SIWE sign-in failed:', err)
+      if (import.meta.dev) console.error('SIWE sign-in failed:', err)
       return false
     } finally {
       isAuthenticating.value = false
@@ -103,7 +104,7 @@ export function useSiwe() {
     try {
       await $fetch('/api/auth/siwe/logout', { method: 'POST' })
     } catch (err) {
-      console.error('SIWE sign-out failed:', err)
+      if (import.meta.dev) console.error('SIWE sign-out failed:', err)
     } finally {
       sessionAddress.value = null
     }

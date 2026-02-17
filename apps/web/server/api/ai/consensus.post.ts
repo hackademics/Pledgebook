@@ -1,9 +1,10 @@
-import { defineEventHandler } from 'h3'
+import { defineEventHandler, getHeader, readRawBody } from 'h3'
 import { useRuntimeConfig } from '#imports'
-import { parseBody } from '../../utils/response'
 import { handleError } from '../../utils/errors'
 import { consensusRequestSchema } from '../../domains/ai/ai.schema'
 import { useAIService } from '../../domains/ai/ai.service'
+import { verifyCREWebhook } from '../../utils/cre'
+import { isAdminAddress } from '../../utils/admin'
 
 // =============================================================================
 // POST /api/ai/consensus
@@ -55,9 +56,24 @@ import { useAIService } from '../../domains/ai/ai.service'
  */
 export default defineEventHandler(async (event) => {
   try {
-    // TODO: Add system/CRE authentication check
-    // For CRE callbacks, verify the webhook signature
-    // await verifyCREWebhook(event, body)
+    // Read raw body for signature verification
+    const rawBody = (await readRawBody(event)) || ''
+
+    // Check if this is a CRE callback (has signature header) or admin request
+    const creSignature = getHeader(event, 'x-cre-signature')
+    const walletAddress = event.context.auth?.address || getHeader(event, 'x-wallet-address')
+
+    if (creSignature) {
+      // Verify CRE webhook signature
+      await verifyCREWebhook(event, rawBody)
+    } else if (walletAddress && typeof walletAddress === 'string') {
+      // Check if caller is admin
+      if (!isAdminAddress(event, walletAddress)) {
+        throw new Error('Admin access required for direct consensus calls')
+      }
+    } else {
+      throw new Error('Missing authentication: CRE signature or admin wallet required')
+    }
 
     // Get API keys from runtime config (Cloudflare-compatible)
     const config = useRuntimeConfig(event)
@@ -67,8 +83,8 @@ export default defineEventHandler(async (event) => {
       google: config.googleAiApiKey as string,
     }
 
-    // Parse and validate request body
-    const input = await parseBody(event, consensusRequestSchema)
+    // Parse and validate request body (already read above)
+    const input = consensusRequestSchema.parse(JSON.parse(rawBody))
 
     // Get AI service and run consensus verification
     const aiService = useAIService()

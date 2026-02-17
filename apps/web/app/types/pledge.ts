@@ -119,26 +119,8 @@ export function getPledgeStatusConfig(status: PledgeStatus): PledgeStatusConfig 
   return configs[status]
 }
 
-/**
- * Format wei amount to human readable string
- */
-export function formatPledgeAmount(weiAmount: string, decimals = 2): string {
-  const wei = BigInt(weiAmount)
-  const usdc = Number(wei) / 1_000_000 // USDC has 6 decimals
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(usdc)
-}
-
-/**
- * Parse human readable amount to wei string
- */
-export function parseAmountToWei(amount: string): string {
-  const cleaned = amount.replace(/[^0-9.]/g, '')
-  const num = Number.parseFloat(cleaned) || 0
-  const wei = Math.floor(num * 1_000_000) // USDC has 6 decimals
-  return wei.toString()
-}
+// Re-export shared currency utilities for backwards compatibility
+export {
+  formatUsdcAmount as formatPledgeAmount,
+  parseUsdcToWei as parseAmountToWei,
+} from '~/utils/currency'

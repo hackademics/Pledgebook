@@ -13,6 +13,7 @@ export type VoucherStatus = 'pending' | 'active' | 'released' | 'slashed' | 'wit
 export interface VoucherResponse {
   id: string
   campaignId: string
+  campaignSlug?: string
   voucherAddress: string
   amount: string
   status: VoucherStatus
@@ -49,6 +50,7 @@ export interface VoucherSummary {
   // Extended fields from join with campaigns
   campaignTitle?: string
   campaignStatus?: string
+  campaignSlug?: string
 }
 
 /**
@@ -133,29 +135,11 @@ export function getVoucherStatusConfig(status: VoucherStatus): VoucherStatusConf
   return configs[status]
 }
 
-/**
- * Format wei amount to human readable string
- */
-export function formatVoucherAmount(weiAmount: string, decimals = 2): string {
-  const wei = BigInt(weiAmount)
-  const usdc = Number(wei) / 1_000_000 // USDC has 6 decimals
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  }).format(usdc)
-}
-
-/**
- * Parse human readable amount to wei string
- */
-export function parseVoucherAmountToWei(amount: string): string {
-  const cleaned = amount.replace(/[^0-9.]/g, '')
-  const num = Number.parseFloat(cleaned) || 0
-  const wei = Math.floor(num * 1_000_000) // USDC has 6 decimals
-  return wei.toString()
-}
+// Re-export shared currency utilities for backwards compatibility
+export {
+  formatUsdcAmount as formatVoucherAmount,
+  parseUsdcToWei as parseVoucherAmountToWei,
+} from '~/utils/currency'
 
 /**
  * Check if voucher is in a final state

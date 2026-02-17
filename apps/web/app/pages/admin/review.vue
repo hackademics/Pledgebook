@@ -41,7 +41,7 @@
                 type="button"
                 class="btn btn--secondary btn--sm"
                 :disabled="pending"
-                @click="refresh"
+                @click="() => refresh()"
               >
                 <Icon name="heroicons:arrow-path" />
                 Refresh
@@ -175,7 +175,7 @@
                 <button
                   type="button"
                   class="btn btn--secondary btn--sm"
-                  @click="refresh"
+                  @click="() => refresh()"
                 >
                   Retry
                 </button>
@@ -217,7 +217,7 @@
                     </div>
                     <div class="admin-review__card-actions">
                       <NuxtLink
-                        :to="`/campaigns/${campaign.slug || campaign.id}`"
+                        :to="`/@${campaign.slug || campaign.id}`"
                         class="btn btn--secondary btn--sm"
                       >
                         View
@@ -236,7 +236,7 @@
                       <div class="form-select-wrapper">
                         <select
                           :id="`status-${campaign.id}`"
-                          v-model="adminEdits[campaign.id].status"
+                          v-model="getAdminEdits(campaign.id).status"
                           class="form-select"
                         >
                           <option value="submitted">Submitted</option>
@@ -261,7 +261,7 @@
                         <div class="form-checkbox-wrapper">
                           <input
                             :id="`featured-${campaign.id}`"
-                            v-model="adminEdits[campaign.id].isFeatured"
+                            v-model="getAdminEdits(campaign.id).isFeatured"
                             type="checkbox"
                             class="form-checkbox"
                           />
@@ -277,7 +277,7 @@
                         <div class="form-checkbox-wrapper">
                           <input
                             :id="`showcased-${campaign.id}`"
-                            v-model="adminEdits[campaign.id].isShowcased"
+                            v-model="getAdminEdits(campaign.id).isShowcased"
                             type="checkbox"
                             class="form-checkbox"
                           />
@@ -293,7 +293,7 @@
                         <div class="form-checkbox-wrapper">
                           <input
                             :id="`verified-${campaign.id}`"
-                            v-model="adminEdits[campaign.id].isVerified"
+                            v-model="getAdminEdits(campaign.id).isVerified"
                             type="checkbox"
                             class="form-checkbox"
                           />
@@ -393,25 +393,32 @@ const toast = useToast()
 // Fetch admin config from API (server has access to Wrangler env vars)
 const { data: adminConfig } = await useFetch('/api/admin/config')
 
-const adminAllowlist = computed(() => adminConfig.value?.data?.allowlist || [])
-const allowlistConfigured = computed(() => adminConfig.value?.data?.configured || false)
+const adminAllowlist = computed(
+  () => (adminConfig.value?.data as { allowlist?: string[] } | undefined)?.allowlist || [],
+)
+const allowlistConfigured = computed(
+  () => (adminConfig.value?.data as { configured?: boolean } | undefined)?.configured || false,
+)
 const isAllowed = computed(() => {
   if (!isConnected.value || !address.value) return false
   return adminAllowlist.value.includes(address.value.toLowerCase())
 })
 
+// @ts-expect-error -- Nuxt useFetch supports null URL to skip the request
 const { data, pending, error, refresh } = useFetch(() =>
   isAllowed.value ? '/api/campaigns?status=submitted&limit=50' : null,
 )
 
-const campaigns = computed(() => data.value?.data || [])
+const campaigns = computed(
+  () => ((data.value as { data?: CampaignSummary[] } | null)?.data || []) as CampaignSummary[],
+)
 
 const pendingCount = computed(() => campaigns.value.length)
 const featuredCount = computed(
-  () => campaigns.value.filter((campaign) => campaign.isFeatured).length,
+  () => campaigns.value.filter((campaign: CampaignSummary) => campaign.isFeatured).length,
 )
 const verifiedCount = computed(
-  () => campaigns.value.filter((campaign) => campaign.isVerified).length,
+  () => campaigns.value.filter((campaign: CampaignSummary) => campaign.isVerified).length,
 )
 
 type CampaignSummary = {
@@ -425,17 +432,25 @@ type CampaignSummary = {
   isVerified: boolean
 }
 
-const adminEdits = reactive<
-  Record<
-    string,
-    {
-      status: string
-      isFeatured: boolean
-      isShowcased: boolean
-      isVerified: boolean
-    }
-  >
->({})
+type AdminEdit = {
+  status: string
+  isFeatured: boolean
+  isShowcased: boolean
+  isVerified: boolean
+}
+
+const adminEdits = reactive<Record<string, AdminEdit>>({})
+
+/**
+ * Get or initialize admin edits for a campaign by ID.
+ * Ensures the reactive entry always exists for v-model binding.
+ */
+function getAdminEdits(id: string): AdminEdit {
+  if (!adminEdits[id]) {
+    adminEdits[id] = { status: '', isFeatured: false, isShowcased: false, isVerified: false }
+  }
+  return adminEdits[id]!
+}
 
 watch(campaigns, (value: CampaignSummary[]) => {
   value.forEach((campaign) => {

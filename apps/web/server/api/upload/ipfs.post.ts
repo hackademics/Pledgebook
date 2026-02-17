@@ -4,6 +4,9 @@ import { sendSuccess } from '../../utils/response'
 import { handleError } from '../../utils/errors'
 import { requireWalletAddress } from '../../utils/auth'
 import { requireTurnstile } from '../../utils/turnstile'
+import { createLogger } from '../../utils/logger'
+
+const logger = createLogger('IPFSUpload')
 
 /**
  * Maximum file size: 5MB
@@ -103,7 +106,7 @@ export default defineEventHandler(async (event) => {
     // Check if Cloudflare bindings are available
     const cloudflare = event.context.cloudflare
     if (!cloudflare) {
-      console.error('[IPFS Upload] Cloudflare bindings not available')
+      logger.error('Cloudflare bindings not available')
       throw createError({
         statusCode: 503,
         message: 'Storage service not available. Please try again later.',
@@ -148,11 +151,9 @@ export default defineEventHandler(async (event) => {
     let formData: Awaited<ReturnType<typeof readMultipartFormData>> | null = null
     try {
       formData = await readMultipartFormData(event)
-      if (import.meta.dev) {
-        console.log('[IPFS Upload] FormData parsed:', formData?.length, 'parts')
-      }
+      logger.debug('FormData parsed', { parts: formData?.length })
     } catch (parseError) {
-      console.error('[IPFS Upload] Failed to parse multipart form data:', parseError)
+      logger.error('Failed to parse multipart form data', { error: parseError })
       throw createError({
         statusCode: 400,
         message: 'Failed to parse upload data. Please try again.',
@@ -160,7 +161,7 @@ export default defineEventHandler(async (event) => {
     }
 
     if (!formData || formData.length === 0) {
-      console.error('[IPFS Upload] No formData parts found')
+      logger.error('No formData parts found')
       throw createError({
         statusCode: 400,
         message: 'No file uploaded. Please select a file.',
@@ -214,7 +215,7 @@ export default defineEventHandler(async (event) => {
       cloudflare.env.NUXT_IPFS_PINATA_SECRET_JWT
 
     if (!pinataJwt) {
-      console.error('[IPFS Upload] Pinata JWT not configured')
+      logger.error('Pinata JWT not configured')
       throw createError({
         statusCode: 503,
         message: 'IPFS pinning is not configured. Please set a Pinata JWT.',
@@ -257,7 +258,7 @@ export default defineEventHandler(async (event) => {
 
       if (!pinataResponse.ok) {
         const errorText = await pinataResponse.text()
-        console.error('[IPFS Upload] Pinata error:', pinataResponse.status, errorText)
+        logger.error('Pinata error', { status: pinataResponse.status, body: errorText })
         throw createError({
           statusCode: 502,
           message: 'Failed to pin file to IPFS.',
@@ -274,7 +275,7 @@ export default defineEventHandler(async (event) => {
         })
       }
     } catch (pinError) {
-      console.error('[IPFS Upload] Pinata upload failed:', pinError)
+      logger.error('Pinata upload failed', { error: pinError })
       throw pinError
     }
 
@@ -294,7 +295,7 @@ export default defineEventHandler(async (event) => {
           },
         })
       } catch (r2Error) {
-        console.warn('[IPFS Upload] R2 backup failed:', r2Error)
+        logger.warn('R2 backup failed', { error: r2Error })
       }
     }
 

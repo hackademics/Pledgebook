@@ -1,6 +1,7 @@
 import { defineEventHandler } from 'h3'
 import { useCloudflare } from '../../utils/cloudflare'
 import { handleError } from '../../utils/errors'
+import { requireAdmin } from '../../utils/admin'
 import { respondNoContent, getRequiredParam } from '../../utils/response'
 import { createCategoryRepository, createCategoryService } from '../../domains/categories'
 
@@ -18,6 +19,9 @@ import { createCategoryRepository, createCategoryService } from '../../domains/c
 export default defineEventHandler(async (event) => {
   try {
     const { DB } = useCloudflare(event)
+
+    // Require admin access
+    requireAdmin(event)
 
     // Get category ID from route
     const id = getRequiredParam(event, 'id')

@@ -172,9 +172,10 @@ import { computed, ref, watch } from 'vue'
 import { useAsyncData, useSeoMeta } from 'nuxt/app'
 import type { DisputerSummary } from '../types/disputer'
 import { useDisputers } from '../composables/useDisputers'
+import { PLEDGE_ESCROW_ABI } from '~/config/contracts'
+import type { Address } from 'viem'
 
-// Mock address - replace with actual wallet connection
-const walletAddress = ref('0x1234567890abcdef1234567890abcdef12345678')
+const { address: walletAddress } = useWallet()
 
 const { getDisputesByAddress, getDisputeStats } = useDisputers()
 
@@ -192,6 +193,8 @@ const stats = ref({ total: 0, pending: 0, upheld: 0, rejected: 0 })
 const { data: disputesData, pending } = await useAsyncData(
   'my-disputes',
   async () => {
+    if (!walletAddress.value) return []
+
     const [disputesResponse, statsData] = await Promise.all([
       getDisputesByAddress(walletAddress.value, {
         page: currentPage.value,
@@ -249,12 +252,70 @@ function toggleSortOrder() {
   sortOrder.value = sortOrder.value === 'desc' ? 'asc' : 'desc'
 }
 
-function handleWithdraw(dispute: DisputerSummary) {
-  console.log('Withdraw dispute:', dispute.id)
+const withdrawing = ref<string | null>(null)
+const actionError = ref<string | null>(null)
+
+async function handleWithdraw(dispute: DisputerSummary) {
+  const { address, isCorrectNetwork, switchToCorrectNetwork, getPublicClient, getWalletClient } =
+    useWallet()
+  if (!address.value) {
+    actionError.value = 'Please connect your wallet first.'
+    return
+  }
+  if (!isCorrectNetwork.value) {
+    const switched = await switchToCorrectNetwork()
+    if (!switched) {
+      actionError.value = 'Please switch to the correct network.'
+      return
+    }
+  }
+
+  withdrawing.value = dispute.id
+  actionError.value = null
+
+  try {
+    // Fetch campaign to get escrow address
+    const api = useApi()
+    const campaignRes = await api.get<{ escrowAddress: string | null }>(
+      `/campaigns/${dispute.campaignId}`,
+    )
+    const escrowAddress = campaignRes.data?.escrowAddress
+    if (!escrowAddress) {
+      actionError.value = 'Campaign escrow address not found.'
+      return
+    }
+
+    const pc = getPublicClient()
+    const wc = getWalletClient()
+    if (!pc || !wc) {
+      actionError.value = 'Wallet client unavailable. Please reconnect.'
+      return
+    }
+
+    const txHash = await wc.writeContract({
+      address: escrowAddress as Address,
+      abi: PLEDGE_ESCROW_ABI,
+      functionName: 'claimDisputeStake',
+      args: [],
+      account: address.value,
+      chain: pc.chain,
+    })
+    await pc.waitForTransactionReceipt({ hash: txHash })
+
+    // Update dispute status in backend
+    const { updateDispute } = useDisputers()
+    await updateDispute(dispute.id, { status: 'withdrawn' })
+  } catch (error: unknown) {
+    const err = error as { shortMessage?: string; message?: string }
+    actionError.value = err.shortMessage || err.message || 'Withdraw failed. Please try again.'
+  } finally {
+    withdrawing.value = null
+  }
 }
 
-function handleAddEvidence(dispute: DisputerSummary) {
-  console.log('Add evidence to dispute:', dispute.id)
+async function handleAddEvidence(dispute: DisputerSummary) {
+  // Navigate to the dispute detail page where evidence can be added
+  await navigateTo(`/disputes/${dispute.id}?action=add-evidence`)
 }
 
 // Reset page when filters change

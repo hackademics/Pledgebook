@@ -72,10 +72,10 @@ export function toCamelCase(str: string): string {
 }
 
 /**
- * Deep clones an object
+ * Deep clones an object using the native structuredClone API
  */
 export function deepClone<T>(obj: T): T {
-  return JSON.parse(JSON.stringify(obj))
+  return structuredClone(obj)
 }
 
 /**

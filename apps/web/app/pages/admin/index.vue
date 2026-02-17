@@ -46,7 +46,7 @@
               </div>
               <div>
                 <p class="admin-dashboard__stat-label">Pending reviews</p>
-                <h3 class="admin-dashboard__stat-value">24</h3>
+                <h3 class="admin-dashboard__stat-value">{{ stats.pendingReviews }}</h3>
               </div>
               <NuxtLink
                 to="/admin/review"
@@ -63,7 +63,7 @@
               </div>
               <div>
                 <p class="admin-dashboard__stat-label">Verified campaigns</p>
-                <h3 class="admin-dashboard__stat-value">312</h3>
+                <h3 class="admin-dashboard__stat-value">{{ stats.verifiedCampaigns }}</h3>
               </div>
               <NuxtLink
                 to="/campaigns"
@@ -80,7 +80,7 @@
               </div>
               <div>
                 <p class="admin-dashboard__stat-label">Disputes open</p>
-                <h3 class="admin-dashboard__stat-value">7</h3>
+                <h3 class="admin-dashboard__stat-value">{{ stats.openDisputes }}</h3>
               </div>
               <button
                 type="button"
@@ -97,7 +97,7 @@
               </div>
               <div>
                 <p class="admin-dashboard__stat-label">Featured slots</p>
-                <h3 class="admin-dashboard__stat-value">4</h3>
+                <h3 class="admin-dashboard__stat-value">{{ stats.featuredSlots }}</h3>
               </div>
               <button
                 type="button"
@@ -125,7 +125,7 @@
             <div class="admin-dashboard__panel-grid">
               <div class="admin-dashboard__panel-card">
                 <h3>Funding velocity</h3>
-                <p class="admin-dashboard__panel-value">$1.4M</p>
+                <p class="admin-dashboard__panel-value">{{ formattedVelocity }}</p>
                 <p class="admin-dashboard__panel-caption">Total pledged this week</p>
               </div>
               <div class="admin-dashboard__panel-card">
@@ -234,9 +234,41 @@
 </template>
 
 <script setup lang="ts">
+import { formatUsdcAmount } from '~/utils/currency'
+
 useSeoMeta({
   title: 'Admin Overview - Pledgebook',
   description: 'Admin dashboard overview for platform health, review queues, and governance tasks.',
+})
+
+interface AdminStats {
+  pendingReviews: number
+  verifiedCampaigns: number
+  openDisputes: number
+  featuredSlots: number
+  pledgeVelocity: number
+}
+
+const defaultStats: AdminStats = {
+  pendingReviews: 0,
+  verifiedCampaigns: 0,
+  openDisputes: 0,
+  featuredSlots: 0,
+  pledgeVelocity: 0,
+}
+
+const { data: statsResponse } = await useAsyncData(
+  'admin-stats',
+  () => $fetch<{ success: boolean; data: AdminStats }>('/api/admin/stats'),
+  { default: () => ({ success: true, data: defaultStats }) },
+)
+
+const stats = computed(() => statsResponse.value?.data ?? defaultStats)
+
+const formattedVelocity = computed(() => {
+  const velocity = stats.value.pledgeVelocity
+  if (velocity === 0) return '$0'
+  return formatUsdcAmount(velocity.toString())
 })
 </script>
 

@@ -36,14 +36,6 @@
               <Icon name="heroicons:star" />
               <span class="btn__label-desktop">Watch</span>
             </button>
-            <button
-              type="button"
-              class="btn btn--primary btn--sm"
-              @click="showPledgeModal = true"
-            >
-              <Icon name="heroicons:bolt" />
-              Pledge
-            </button>
           </div>
         </div>
       </div>
@@ -55,12 +47,23 @@
         <div class="campaign-grid">
           <!-- Left Column: Core Content -->
           <div class="campaign-grid__main">
+            <!-- Pledge Form Section -->
+            <section class="campaign-pledge-section">
+              <PledgeForm
+                :campaign-title="campaign.title"
+                :campaign-slug="route.params.slug as string"
+                :campaign-id="rawCampaign?.id"
+                :escrow-address="rawCampaign?.escrowAddress ?? undefined"
+              />
+            </section>
+
             <!-- Hero Section: Title + Progress -->
             <section class="campaign-hero">
               <div class="campaign-hero__media">
                 <img
                   :src="campaign.coverImage"
                   :alt="campaign.title"
+                  @error="handleImageError"
                 />
                 <div class="campaign-hero__overlay">
                   <div class="campaign-hero__category">
@@ -86,25 +89,6 @@
                 <p class="campaign-hero__subtitle">
                   {{ campaign.subtitle }}
                 </p>
-
-                <!-- Primary CTA -->
-                <div class="campaign-hero__cta">
-                  <button
-                    type="button"
-                    class="btn btn--primary btn--lg"
-                    @click="showPledgeModal = true"
-                  >
-                    <Icon name="heroicons:bolt" />
-                    Pledge Now
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn--secondary"
-                  >
-                    <Icon name="heroicons:star" />
-                    Watch
-                  </button>
-                </div>
 
                 <!-- Progress Card -->
                 <div class="progress-card">
@@ -305,14 +289,6 @@
                   {{ campaign.daysLeft }}d left
                 </span>
               </div>
-              <button
-                type="button"
-                class="btn btn--primary btn--lg btn--full"
-                @click="showPledgeModal = true"
-              >
-                <Icon name="heroicons:bolt" />
-                Make a Pledge
-              </button>
               <p class="pledge-cta__note">
                 <Icon name="heroicons:shield-check" />
                 Funds held in escrow until verified
@@ -381,6 +357,30 @@
                   <span class="voucher-item__amount">{{ voucher.amount }}</span>
                 </div>
               </div>
+              <button
+                type="button"
+                class="btn btn--secondary btn--full sidebar-card__btn"
+                @click="showVouchModal = true"
+              >
+                <Icon name="heroicons:shield-check" />
+                Vouch for Campaign
+              </button>
+            </div>
+
+            <!-- Report Concerns -->
+            <div class="sidebar-card sidebar-card--warning">
+              <h3 class="sidebar-card__title">Have Concerns?</h3>
+              <p class="sidebar-card__text">
+                If you believe this campaign is fraudulent or misleading, you can file a dispute.
+              </p>
+              <button
+                type="button"
+                class="btn btn--ghost btn--full sidebar-card__btn sidebar-card__btn--danger"
+                @click="showDisputeModal = true"
+              >
+                <Icon name="heroicons:flag" />
+                File a Dispute
+              </button>
             </div>
 
             <!-- CTA Card -->
@@ -406,29 +406,180 @@
       </div>
     </main>
 
-    <!-- Pledge Modal -->
-    <PledgeModal
-      v-model:visible="showPledgeModal"
+    <!-- Vouch Modal -->
+    <VouchModal
+      v-model:visible="showVouchModal"
+      :campaign-id="rawCampaign.id"
       :campaign-title="campaign.title"
       :campaign-slug="route.params.slug as string"
+      :escrow-address="rawCampaign.escrowAddress ?? undefined"
+      @success="handleVouchSuccess"
+    />
+
+    <!-- Dispute Modal -->
+    <DisputeModal
+      v-model:visible="showDisputeModal"
+      :campaign-id="rawCampaign.id"
+      :campaign-title="campaign.title"
+      :campaign-slug="route.params.slug as string"
+      :escrow-address="rawCampaign.escrowAddress ?? undefined"
+      @success="handleDisputeSuccess"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { useRoute } from 'vue-router'
-import { useSeoMeta } from 'nuxt/app'
+import { useSeoMeta, useAsyncData, createError } from 'nuxt/app'
 
 const route = useRoute()
+const slug = computed(() => route.params.slug as string)
 
 // Modal state
-const showPledgeModal = ref(false)
+const showVouchModal = ref(false)
+const showDisputeModal = ref(false)
+
+// Fallback image for missing campaign images
+const FALLBACK_IMAGE =
+  'https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=1600&q=80'
+
+// Fetch campaign data from API
+const { data: campaignResponse, error: campaignError } = await useAsyncData(
+  `campaign-${slug.value}`,
+  () =>
+    $fetch<{
+      success: boolean
+      data: {
+        id: string
+        name: string
+        slug: string
+        purpose: string
+        rulesAndResolution: string
+        prompt: string
+        promptHash: string
+        status: string
+        baselineData: Record<string, unknown>
+        privacyMode: boolean
+        consensusThreshold: number
+        creatorAddress: string
+        creatorBond: string
+        amountPledged: string
+        fundraisingGoal: string
+        tags: string[]
+        categories: string[]
+        imageUrl: string | null
+        bannerUrl: string | null
+        isVerified: boolean
+        isDisputed: boolean
+        escrowAddress: string | null
+        startDate: string | null
+        endDate: string
+        pledgeCount: number
+        uniquePledgers: number
+        voucherCount: number
+        disputerCount: number
+      }
+    }>(`/api/campaigns/${slug.value}`),
+)
+
+// Handle campaign not found
+if (campaignError.value || !campaignResponse.value?.data) {
+  throw createError({
+    statusCode: 404,
+    statusMessage: 'Campaign not found',
+    message: `The campaign "${slug.value}" could not be found.`,
+  })
+}
+
+const rawCampaign = campaignResponse.value.data
+
+// Transform API response to template format
+const campaign = computed(() => {
+  const c = rawCampaign
+  const pledged = Number(c.amountPledged ?? 0) / 1e6 // wei to USDC
+  const goal = Number(c.fundraisingGoal ?? 1) / 1e6
+  const progress = goal > 0 ? Math.min(Math.round((pledged / goal) * 100), 100) : 0
+  const daysLeft = c.endDate
+    ? Math.max(0, Math.ceil((new Date(c.endDate).getTime() - Date.now()) / 86400000))
+    : 0
+  const avgPledge = c.uniquePledgers > 0 ? Math.round(pledged / c.uniquePledgers) : 0
+
+  // Determine status label based on campaign state
+  let statusLabel = c.status.charAt(0).toUpperCase() + c.status.slice(1)
+  if (c.isVerified && c.status === 'active') {
+    statusLabel = 'Verified & Active'
+  } else if (c.isDisputed) {
+    statusLabel = 'Disputed'
+  }
+
+  return {
+    title: c.name,
+    subtitle: c.purpose,
+    statusLabel,
+    state: c.status,
+    creator: c.creatorAddress
+      ? `${c.creatorAddress.slice(0, 6)}...${c.creatorAddress.slice(-4)}`
+      : 'Unknown',
+    location: 'Global', // Could be extracted from baselineData if available
+    daysLeft,
+    pledged: `$${pledged.toLocaleString()}`,
+    goal: `$${goal.toLocaleString()}`,
+    progress,
+    pledgers: c.uniquePledgers,
+    avgPledge: `$${avgPledge.toLocaleString()}`,
+    vouchers: c.voucherCount,
+    disputes: c.disputerCount,
+    consensus: `${Math.round(c.consensusThreshold * 100)}% multi-AI consensus`,
+    consensusModel: 'Consensus prompt v2.1',
+    verificationState: c.isVerified ? 'Verified · CRE monitoring' : 'Pending verification',
+    proof: 'Evidence-based verification',
+    privacy: c.privacyMode ? 'ZKP enabled' : 'Public',
+    escrowAddress: c.escrowAddress ?? '0x0000000000000000000000000000000000000000',
+    pledgeStatement: c.rulesAndResolution,
+    promptHash: c.promptHash,
+    consensusPrompt: c.prompt,
+    dataSources: [
+      {
+        label: 'Verification Data',
+        detail: 'Data sources for campaign verification.',
+        type: 'Public API',
+      },
+    ],
+    coverImage: getValidImageUrl(c.imageUrl) ?? getValidImageUrl(c.bannerUrl) ?? FALLBACK_IMAGE,
+    about: c.purpose,
+    tags: c.tags.length > 0 ? c.tags : c.categories.length > 0 ? c.categories : ['General'],
+  }
+})
+
+/**
+ * Validate image URL - returns null for invalid local paths
+ */
+function getValidImageUrl(url: string | null | undefined): string | null {
+  if (!url) return null
+  // If it's an external URL (starts with http/https), use it
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url
+  }
+  // Local paths starting with /images/campaigns/ don't exist - return null
+  if (url.startsWith('/images/campaigns/')) {
+    return null
+  }
+  return url
+}
 
 useSeoMeta({
-  title: `${route.params.slug} - Campaign Details | Pledgebook`,
-  description: 'View campaign details, pledge progress, verification status, and evidence sources.',
+  title: `${campaign.value.title} - Campaign Details | Pledgebook`,
+  description: campaign.value.subtitle,
 })
+
+function handleImageError(event: Event) {
+  const img = event.target as HTMLImageElement
+  // Check if we haven't already set the fallback (comparing by URL pattern since img.src is absolute)
+  if (!img.src.includes('unsplash.com/photo-1504893524553')) {
+    img.src = FALLBACK_IMAGE
+  }
+}
 
 function getSourceIcon(type: string): string {
   const icons: Record<string, string> = {
@@ -439,120 +590,38 @@ function getSourceIcon(type: string): string {
   return icons[type] || 'heroicons:document'
 }
 
-const campaign = {
-  title: 'Clean Water Access Initiative',
-  subtitle:
-    'Deliver solar-powered filtration systems to rural communities and publish verified water tests.',
-  statusLabel: 'Verified & Active',
-  state: 'Active',
-  creator: 'Amina A.',
-  location: 'Nairobi, Kenya',
-  daysLeft: 28,
-  pledged: '$318,450',
-  goal: '$450,000',
-  progress: 71,
-  pledgers: 412,
-  avgPledge: '$774',
-  vouchers: 26,
-  disputes: 1,
-  consensus: '66% multi-AI consensus',
-  consensusModel: 'Consensus prompt v2.1',
-  verificationState: 'Baseline captured · CRE monitoring',
-  proof: 'Weekly test reports',
-  privacy: 'ZKP enabled',
-  escrowAddress: '0x742d35Cc6634C0532925a3b844Bc9e7595f8fE21',
-  pledgeStatement:
-    'We pledge to install 120 solar-powered filtration units by Sep 30, 2026 and will verify completion using a consensus prompt with independent water-quality data sources.',
-  promptHash: '0x9a3f5c8b7d1e4b6c2f0a6e3d9b8c7f1a4e5d6c7b8a9f0e1d2c3b4a5f6e7d8c9',
-  consensusPrompt:
-    'Verify that 120 filtration units are installed by Sep 30, 2026 by checking weekly sensor telemetry, public health inspection reports, and photo evidence with geo-metadata. Return TRUE if ≥120 verified installations exist, else FALSE.',
-  dataSources: [
-    {
-      label: 'Water sensor telemetry',
-      detail: 'Public API feed with weekly chlorine & turbidity readings.',
-      type: 'Public API',
-    },
-    {
-      label: 'Health inspection reports',
-      detail: 'County published audits cross-referenced with school IDs.',
-      type: 'Government data',
-    },
-    {
-      label: 'Field photo evidence',
-      detail: 'Geo-tagged photo uploads with OCR for unit serials.',
-      type: 'Image + OCR',
-    },
-  ],
-  coverImage:
-    'https://images.unsplash.com/photo-1504893524553-b855bce32c67?auto=format&fit=crop&w=1600&q=80',
-  about:
-    'This campaign deploys modular filtration units to schools and health centers. We publish weekly water test results and photo evidence that is verified by independent AI providers.',
-  tags: ['Health', 'Infrastructure', 'Water', 'Verified'],
-}
-
-const donors = [
+// TODO: Fetch real pledges/donors from API when endpoint is available
+const donors = ref([
   {
     id: 'pledge-1',
-    name: 'Serena W.',
-    initials: 'SW',
-    amount: '$18,200',
-    time: '2 hours ago',
-    note: 'Matched pledge for school installation.',
+    name: 'Anonymous',
+    initials: 'AN',
+    amount: '$0',
+    time: 'Recently',
+    note: 'Pledge data coming soon.',
   },
-  {
-    id: 'pledge-2',
-    name: 'Atlas Capital',
-    initials: 'AC',
-    amount: '$12,500',
-    time: '5 hours ago',
-    note: 'Committed to phase-two expansion.',
-  },
-  {
-    id: 'pledge-4',
-    name: 'Nia R.',
-    initials: 'NR',
-    amount: '$6,900',
-    time: '1 day ago',
-    note: 'Funding equipment maintenance.',
-  },
-  {
-    id: 'pledge-5',
-    name: 'Kaito Labs',
-    initials: 'KL',
-    amount: '$5,300',
-    time: '1 day ago',
-    note: 'Supporting real-time telemetry.',
-  },
-  {
-    id: 'pledge-6',
-    name: 'Liam C.',
-    initials: 'LC',
-    amount: '$4,800',
-    time: '2 days ago',
-    note: 'Local community advocate.',
-  },
-]
+])
 
-const vouchers = [
+// TODO: Fetch real vouchers from API when endpoint is available
+const vouchers = ref([
   {
     id: 'voucher-1',
-    name: 'Civic Impact DAO',
-    amount: '$3,200',
-    note: 'Verification stakeholder',
+    name: 'Voucher data',
+    amount: '$0',
+    note: 'Coming soon',
   },
-  {
-    id: 'voucher-2',
-    name: 'Maya P.',
-    amount: '$1,500',
-    note: 'Healthcare partner',
-  },
-  {
-    id: 'voucher-3',
-    name: 'Lumen Foundation',
-    amount: '$1,000',
-    note: 'Local implementation advisor',
-  },
-]
+])
+
+// Modal success handlers
+function handleVouchSuccess(voucherId: string, txHash: string) {
+  // TODO: Refresh vouchers list and show success notification
+  console.log('Vouch submitted:', voucherId, txHash)
+}
+
+function handleDisputeSuccess(disputeId: string, txHash: string) {
+  // TODO: Show success notification and potentially redirect to dispute page
+  console.log('Dispute submitted:', disputeId, txHash)
+}
 </script>
 
 <style scoped>
@@ -660,6 +729,14 @@ const vouchers = [
 
 .campaign-main {
   padding: 1.25rem 0 3rem;
+}
+
+/* -----------------------------------------------------------------------------
+   Pledge Form Section - Inline pledge form at top of content
+   ----------------------------------------------------------------------------- */
+
+.campaign-pledge-section {
+  margin-bottom: 1.5rem;
 }
 
 /* -----------------------------------------------------------------------------
@@ -1300,6 +1377,70 @@ const vouchers = [
 
 .sidebar-card--cta .sidebar-card__title {
   margin-bottom: 0.25rem;
+}
+
+/* Warning Card Variant */
+.sidebar-card--warning {
+  background: linear-gradient(
+    135deg,
+    color-mix(in oklch, var(--color-warning-500) 8%, var(--bg-primary)),
+    var(--bg-primary)
+  );
+  border-color: color-mix(in oklch, var(--color-warning-500) 25%, var(--border-primary));
+}
+
+.sidebar-card--warning .sidebar-card__icon {
+  color: var(--color-warning-500);
+}
+
+/* Sidebar Card Buttons */
+.sidebar-card__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.625rem 1rem;
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--text-primary);
+  background-color: var(--surface-secondary);
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.sidebar-card__btn:hover {
+  background-color: var(--surface-tertiary);
+  border-color: var(--border-secondary);
+}
+
+.sidebar-card__btn .icon {
+  width: 1rem;
+  height: 1rem;
+}
+
+.sidebar-card__btn--primary {
+  color: white;
+  background-color: var(--interactive-primary);
+  border-color: var(--interactive-primary);
+}
+
+.sidebar-card__btn--primary:hover {
+  background-color: var(--interactive-primary-hover);
+  border-color: var(--interactive-primary-hover);
+}
+
+.sidebar-card__btn--danger {
+  color: white;
+  background-color: var(--color-error-500);
+  border-color: var(--color-error-500);
+}
+
+.sidebar-card__btn--danger:hover {
+  background-color: var(--color-error-600);
+  border-color: var(--color-error-600);
 }
 
 /* Pledge CTA Card */

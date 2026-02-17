@@ -702,7 +702,7 @@ async function copyAddress() {
       showCopied.value = false
     }, 2000)
   } catch (error) {
-    console.error('Failed to copy address:', error)
+    if (import.meta.dev) console.error('Failed to copy address:', error)
   }
 }
 

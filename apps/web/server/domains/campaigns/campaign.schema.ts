@@ -1,14 +1,17 @@
 import { z } from 'zod'
+import {
+  walletAddressSchema,
+  campaignIdSchema,
+  weiAmountSchema,
+  coerceNumber,
+} from '../shared.schema'
+
+export { walletAddressSchema, campaignIdSchema, weiAmountSchema }
 
 // =============================================================================
 // CAMPAIGN DOMAIN SCHEMAS
 // Purpose: Zod validation schemas for Campaign entity
 // =============================================================================
-
-/**
- * UUID validation for campaign ID
- */
-export const campaignIdSchema = z.string().uuid('Invalid campaign ID format')
 
 /**
  * Campaign slug validation (URL-friendly identifier)
@@ -18,14 +21,6 @@ export const campaignSlugSchema = z
   .min(3, 'Slug must be at least 3 characters')
   .max(100, 'Slug must not exceed 100 characters')
   .regex(/^[a-z0-9-]+$/, 'Slug must be lowercase with hyphens only')
-
-/**
- * Ethereum wallet address validation
- */
-export const walletAddressSchema = z
-  .string()
-  .regex(/^0x[a-fA-F0-9]{40}$/, 'Invalid Ethereum wallet address')
-  .transform((val) => val.toLowerCase())
 
 /**
  * Campaign status enum
@@ -40,11 +35,6 @@ export const campaignStatusSchema = z.enum([
   'disputed',
   'cancelled',
 ])
-
-/**
- * Wei amount validation (stored as string for large numbers)
- */
-export const weiAmountSchema = z.string().regex(/^\d+$/, 'Amount must be a positive integer string')
 
 /**
  * Base Campaign schema (database row representation)
@@ -170,11 +160,15 @@ export const campaignSummarySchema = z.object({
   name: z.string(),
   slug: z.string(),
   purpose: z.string(),
+  description: z.string(),
   status: campaignStatusSchema,
   imageUrl: z.string().nullable(),
   amountPledged: z.string(),
   fundraisingGoal: z.string(),
   pledgeCount: z.number(),
+  voucherCount: z.number(),
+  categories: z.array(z.string()),
+  category: z.string(),
   isShowcased: z.boolean(),
   isFeatured: z.boolean(),
   isVerified: z.boolean(),
@@ -226,15 +220,6 @@ export const adminUpdateCampaignSchema = updateCampaignSchema.extend({
   isFeatured: z.boolean().optional(),
   isVerified: z.boolean().optional(),
 })
-
-/**
- * Coerce string to number with undefined fallback
- */
-const coerceNumber = (defaultValue: number) =>
-  z.preprocess(
-    (val) => (val === undefined || val === '' ? defaultValue : Number(val)),
-    z.number().int(),
-  )
 
 /**
  * Query parameters for listing campaigns

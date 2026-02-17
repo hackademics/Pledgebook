@@ -260,12 +260,15 @@ import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from
 import type { VoucherFormState } from '../types/voucher'
 import { parseVoucherAmountToWei } from '../types/voucher'
 import { useVouchers } from '../composables/useVouchers'
+import { ERC20_ABI, PLEDGE_ESCROW_ABI, getUsdcAddress } from '~/config/contracts'
+import type { Address } from 'viem'
 
 interface Props {
   visible: boolean
   campaignId: string
   campaignTitle: string
   campaignSlug: string
+  escrowAddress?: string
 }
 
 const props = defineProps<Props>()
@@ -276,6 +279,15 @@ const emit = defineEmits<{
 }>()
 
 const { createVoucher } = useVouchers()
+const {
+  isConnected: isWalletConnected,
+  connect,
+  address,
+  isCorrectNetwork,
+  switchToCorrectNetwork,
+  getPublicClient,
+  getWalletClient,
+} = useWallet()
 const amountInput = ref<HTMLInputElement | null>(null)
 const lastActiveElement = ref<HTMLElement | null>(null)
 
@@ -291,7 +303,6 @@ const errors = reactive({
 })
 
 const isSubmitting = ref(false)
-const isWalletConnected = ref(false) // TODO: Replace with actual wallet state
 
 const quickAmounts = ['50', '100', '250', '500', '1000']
 
@@ -381,27 +392,65 @@ function resetForm() {
   errors.amount = ''
 }
 
-function connectWallet() {
-  // TODO: Integrate with wallet connection
-  isWalletConnected.value = true
+async function connectWallet() {
+  await connect('metamask')
 }
 
 async function handleSubmit() {
   if (!validateAmount() || isSubmitting.value) return
+  if (!address.value || !props.escrowAddress) {
+    errors.amount = 'Wallet not connected or escrow address missing.'
+    return
+  }
+
+  // Ensure correct network
+  if (!isCorrectNetwork.value) {
+    const switched = await switchToCorrectNetwork()
+    if (!switched) {
+      errors.amount = 'Please switch to the correct network.'
+      return
+    }
+  }
 
   isSubmitting.value = true
 
   try {
-    // TODO: Integrate with smart contract
-    // 1. Call PledgeEscrow.vouch() on-chain
-    // 2. Wait for transaction confirmation
-    // 3. Create voucher record in backend
-
     const weiAmount = parseVoucherAmountToWei(form.amount)
+    const pc = getPublicClient()
+    const wc = getWalletClient()
 
-    // Mock transaction hash for now
-    const txHash = `0x${Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`
+    if (!pc || !wc) {
+      errors.amount = 'Wallet client unavailable. Please reconnect.'
+      return
+    }
 
+    const usdcAddress = getUsdcAddress(pc.chain?.id ?? 80002)
+    const escrow = props.escrowAddress as Address
+
+    // Step 1: Approve USDC spend by escrow contract
+    const approveHash = await wc.writeContract({
+      address: usdcAddress,
+      abi: ERC20_ABI,
+      functionName: 'approve',
+      args: [escrow, BigInt(weiAmount)],
+      account: address.value,
+      chain: pc.chain,
+    })
+    await pc.waitForTransactionReceipt({ hash: approveHash })
+
+    // Step 2: Call PledgeEscrow.vouch(amount)
+    const vouchHash = await wc.writeContract({
+      address: escrow,
+      abi: PLEDGE_ESCROW_ABI,
+      functionName: 'vouch',
+      args: [BigInt(weiAmount)],
+      account: address.value,
+      chain: pc.chain,
+    })
+    const receipt = await pc.waitForTransactionReceipt({ hash: vouchHash })
+    const txHash = receipt.transactionHash
+
+    // Step 3: Record voucher in backend
     const response = await createVoucher({
       campaignId: props.campaignId,
       amount: weiAmount,
@@ -417,9 +466,9 @@ async function handleSubmit() {
     } else {
       errors.amount = response.error?.message || 'Failed to create voucher'
     }
-  } catch (error) {
-    console.error('Vouch failed:', error)
-    errors.amount = 'Transaction failed. Please try again.'
+  } catch (error: unknown) {
+    const err = error as { shortMessage?: string; message?: string }
+    errors.amount = err.shortMessage || err.message || 'Transaction failed. Please try again.'
   } finally {
     isSubmitting.value = false
   }

@@ -40,13 +40,32 @@ export function useSearch() {
     error.value = null
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await $fetch<{ success: boolean; data: SearchResult[] }>('/api/search', {
-      //   params: { q: searchQuery }
-      // })
+      const response = await $fetch<{
+        success: boolean
+        data: Array<{
+          id: string
+          name: string
+          description?: string
+          slug: string
+          category?: string
+          imageUrl?: string
+        }>
+      }>('/api/campaigns', {
+        params: { search: searchQuery, limit: 10 },
+      })
 
-      // Mock results for now
-      results.value = getMockResults(searchQuery)
+      if (response.success && response.data) {
+        results.value = response.data.map((campaign) => ({
+          id: campaign.id,
+          title: campaign.name,
+          description: campaign.description,
+          type: 'campaign' as const,
+          url: `/@${campaign.slug}`,
+          image: campaign.imageUrl,
+        }))
+      } else {
+        results.value = []
+      }
     } catch (err) {
       error.value = err instanceof Error ? err : new Error('Search failed')
       results.value = []
@@ -130,43 +149,6 @@ export function useSearch() {
     if (import.meta.client) {
       localStorage.removeItem('pledgebook_recent_searches')
     }
-  }
-
-  /**
-   * Mock results for development
-   */
-  function getMockResults(searchQuery: string): SearchResult[] {
-    const mockData: SearchResult[] = [
-      {
-        id: '1',
-        title: 'Will Bitcoin reach $100k by 2026?',
-        description: 'Crypto prediction campaign',
-        type: 'campaign',
-        url: '/campaigns/bitcoin-100k-2026',
-      },
-      {
-        id: '2',
-        title: 'US Presidential Election 2028',
-        description: 'Political prediction campaign',
-        type: 'campaign',
-        url: '/campaigns/us-election-2028',
-      },
-      {
-        id: '3',
-        title: 'Technology',
-        description: 'Tech-related campaigns',
-        type: 'category',
-        url: '/categories/technology',
-      },
-    ]
-
-    // Filter mock data based on query
-    const lowerQuery = searchQuery.toLowerCase()
-    return mockData.filter(
-      (item) =>
-        item.title.toLowerCase().includes(lowerQuery) ||
-        item.description?.toLowerCase().includes(lowerQuery),
-    )
   }
 
   // Watch for query changes to update open state

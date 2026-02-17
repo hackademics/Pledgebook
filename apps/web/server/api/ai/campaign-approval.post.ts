@@ -2,6 +2,7 @@ import { defineEventHandler } from 'h3'
 import { useRuntimeConfig } from '#imports'
 import { parseBody } from '../../utils/response'
 import { handleError } from '../../utils/errors'
+import { requireAdmin } from '../../utils/admin'
 import { campaignApprovalRequestSchema } from '../../domains/ai/ai.schema'
 import { useAIService } from '../../domains/ai/ai.service'
 
@@ -43,11 +44,8 @@ import { useAIService } from '../../domains/ai/ai.service'
  */
 export default defineEventHandler(async (event) => {
   try {
-    // TODO: Add admin/system authentication check
-    // const { isAdmin } = await requireAuth(event)
-    // if (!isAdmin) {
-    //   throw createApiError(ApiErrorCode.FORBIDDEN, 'Admin access required')
-    // }
+    // Require admin authentication - throws if not authorized
+    requireAdmin(event)
 
     // Get API keys from runtime config (Cloudflare-compatible)
     const config = useRuntimeConfig(event)

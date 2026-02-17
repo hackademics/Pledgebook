@@ -174,13 +174,15 @@ export function useCampaignForm() {
 
     slugCheckTimeout = setTimeout(async () => {
       try {
-        // Mock API call - replace with real endpoint
-        await new Promise((resolve) => setTimeout(resolve, 500))
-
-        // Simulate some slugs being taken
-        const takenSlugs = ['test', 'demo', 'campaign', 'example']
-        slugAvailable.value = !takenSlugs.includes(slug)
+        const response = await $fetch<{ success: boolean; data: { available: boolean } }>(
+          `/api/campaigns/check-slug`,
+          {
+            params: { slug },
+          },
+        )
+        slugAvailable.value = response.success && response.data?.available !== false
       } catch {
+        // On error, assume available to not block creation
         slugAvailable.value = null
       } finally {
         slugChecking.value = false
@@ -381,11 +383,10 @@ export function useCampaignForm() {
     try {
       const formData = getFormData()
 
-      // Mock API call - replace with real submission
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Simulate successful submission
-      console.log('Form submitted:', formData)
+      await $fetch('/api/campaigns/create', {
+        method: 'POST',
+        body: formData,
+      })
 
       submitState.isSuccess = true
       return true
