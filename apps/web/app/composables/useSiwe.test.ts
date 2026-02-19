@@ -29,7 +29,7 @@ describe('useSiwe', () => {
   })
 
   it('checkSession returns false when no active session', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: { authenticated: false, address: null },
     })
@@ -42,7 +42,7 @@ describe('useSiwe', () => {
   })
 
   it('checkSession returns true with valid session', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: { authenticated: true, address: '0x1234567890abcdef1234567890abcdef12345678' },
     })
@@ -56,7 +56,9 @@ describe('useSiwe', () => {
   })
 
   it('checkSession handles network errors gracefully', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'))
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('Network error'),
+    )
 
     const { checkSession, isAuthenticated } = useSiwe()
     const result = await checkSession()
@@ -66,7 +68,7 @@ describe('useSiwe', () => {
   })
 
   it('signOut clears session address', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({})
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({})
 
     const { signOut, sessionAddress } = useSiwe()
     sessionAddress.value = '0x1234'
@@ -77,7 +79,9 @@ describe('useSiwe', () => {
   })
 
   it('signOut handles errors without throwing', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Logout failed'))
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('Logout failed'),
+    )
 
     const { signOut, sessionAddress } = useSiwe()
     sessionAddress.value = '0x1234'

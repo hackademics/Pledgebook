@@ -236,6 +236,11 @@ async function applyConnection(
   options: { shouldSwitchNetwork: boolean },
 ): Promise<void> {
   if (!ethereumProvider) return
+  const primaryAccount = accounts[0]
+  if (!primaryAccount) {
+    resetWalletState()
+    return
+  }
 
   publicClient = createPublicClient({
     chain: getChainById(chainId),
@@ -250,7 +255,7 @@ async function applyConnection(
   walletState.value = {
     isConnected: true,
     isConnecting: false,
-    address: getAddress(accounts[0]) as Address,
+    address: getAddress(primaryAccount) as Address,
     provider: providerId,
     chainId,
     network: NETWORK_NAMES[chainId] || `Chain ${chainId}`,
@@ -277,12 +282,13 @@ async function applyConnection(
 
 function handleAccountsChanged(accounts: unknown): void {
   const accountList = accounts as string[]
+  const primaryAccount = accountList[0]
   if (accountList.length === 0) {
     // User disconnected
     resetWalletState()
-  } else {
+  } else if (primaryAccount) {
     // Account changed
-    walletState.value.address = getAddress(accountList[0]) as Address
+    walletState.value.address = getAddress(primaryAccount) as Address
     // Refresh balance
     fetchUsdcBalance()
   }

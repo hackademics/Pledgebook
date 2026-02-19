@@ -57,14 +57,14 @@ export function toVoucherSummary(row: Voucher, campaignSlug?: string): VoucherSu
  * Maps multiple database rows to full API response format
  */
 export function toVoucherResponseList(rows: Voucher[]): VoucherResponse[] {
-  return rows.map(toVoucherResponse)
+  return rows.map((row) => toVoucherResponse(row))
 }
 
 /**
  * Maps multiple database rows to summary format
  */
 export function toVoucherSummaryList(rows: Voucher[]): VoucherSummary[] {
-  return rows.map(toVoucherSummary)
+  return rows.map((row) => toVoucherSummary(row))
 }
 
 /**

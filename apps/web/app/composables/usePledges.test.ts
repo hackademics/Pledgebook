@@ -31,7 +31,7 @@ describe('usePledges', () => {
   })
 
   it('createPledge sends correct data', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: { id: 'pledge-1', status: 'pending' },
     })
@@ -49,7 +49,7 @@ describe('usePledges', () => {
   })
 
   it('getPledge fetches by ID', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: { id: 'pledge-1', amount: '100000000' },
     })
@@ -65,7 +65,7 @@ describe('usePledges', () => {
   })
 
   it('getMyPledges returns paginated list', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: [
         { id: 'p1', amount: '100000000' },
@@ -81,7 +81,7 @@ describe('usePledges', () => {
   })
 
   it('hasUserPledged returns boolean', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: { hasPledged: true },
     })
@@ -93,7 +93,9 @@ describe('usePledges', () => {
   })
 
   it('sets error on failure', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Server error'))
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('Server error'),
+    )
 
     const { getPledge, error } = usePledges()
 

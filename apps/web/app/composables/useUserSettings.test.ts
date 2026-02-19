@@ -41,7 +41,7 @@ describe('useUserSettings', () => {
   })
 
   it('fetchUser populates form on success', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: [
         {
@@ -73,7 +73,7 @@ describe('useUserSettings', () => {
   })
 
   it('fetchUser handles missing user gracefully', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: [],
     })
@@ -86,7 +86,9 @@ describe('useUserSettings', () => {
   })
 
   it('fetchUser sets error on network failure', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'))
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('Network error'),
+    )
 
     const { fetchUser, fetchError } = useUserSettings()
     await fetchUser('0x1234')
@@ -133,7 +135,7 @@ describe('useUserSettings', () => {
   })
 
   it('resetForm restores original values', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: [
         {

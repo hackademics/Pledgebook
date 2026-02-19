@@ -23,7 +23,7 @@ describe('useApi', () => {
   })
 
   it('get calls $fetch with correct URL', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: { id: '1' },
     })
@@ -39,7 +39,7 @@ describe('useApi', () => {
   })
 
   it('post sends body and method POST', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: { id: 'new' },
     })
@@ -58,7 +58,9 @@ describe('useApi', () => {
   })
 
   it('handles error responses gracefully', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'))
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('Network error'),
+    )
 
     const api = useApi()
 

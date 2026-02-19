@@ -70,14 +70,14 @@ export function toDisputerSummary(row: Disputer, campaignSlug?: string): Dispute
  * Maps multiple database rows to full API response format
  */
 export function toDisputerResponseList(rows: Disputer[]): DisputerResponse[] {
-  return rows.map(toDisputerResponse)
+  return rows.map((row) => toDisputerResponse(row))
 }
 
 /**
  * Maps multiple database rows to summary format
  */
 export function toDisputerSummaryList(rows: Disputer[]): DisputerSummary[] {
-  return rows.map(toDisputerSummary)
+  return rows.map((row) => toDisputerSummary(row))
 }
 
 /**

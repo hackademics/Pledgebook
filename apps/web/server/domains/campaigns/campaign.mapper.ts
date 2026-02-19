@@ -99,9 +99,10 @@ export function toCampaignSummary(row: Campaign): CampaignSummary {
  */
 function parsePrimaryCategory(categories: string | string[]): string {
   const parsed = parseJson<string[]>(categories as string, [])
-  if (parsed.length > 0) {
+  const primaryCategory = parsed[0]
+  if (primaryCategory) {
     // Convert slug like 'shelter-housing' to display name
-    return parsed[0]
+    return primaryCategory
       .split('-')
       .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
       .join(' ')

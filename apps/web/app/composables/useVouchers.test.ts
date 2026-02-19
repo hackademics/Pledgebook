@@ -33,7 +33,7 @@ describe('useVouchers', () => {
   })
 
   it('createVoucher sends correct data', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: { id: 'voucher-1', status: 'pending' },
     })
@@ -50,7 +50,7 @@ describe('useVouchers', () => {
   })
 
   it('getVoucherStats calculates stats correctly', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: [
         { status: 'active', amount: '100000000' },
@@ -68,7 +68,7 @@ describe('useVouchers', () => {
   })
 
   it('hasUserVouched returns boolean', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: [],
     })
@@ -80,7 +80,9 @@ describe('useVouchers', () => {
   })
 
   it('sets error on API failure', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Failed to fetch'))
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('Failed to fetch'),
+    )
 
     const { getVoucher, error } = useVouchers()
 

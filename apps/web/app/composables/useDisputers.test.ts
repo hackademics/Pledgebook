@@ -35,7 +35,7 @@ describe('useDisputers', () => {
   })
 
   it('createDispute calls API and sets loading', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: { id: 'dispute-1', status: 'pending' },
     })
@@ -60,7 +60,7 @@ describe('useDisputers', () => {
   })
 
   it('getDispute fetches by ID', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: { id: 'dispute-1', status: 'pending' },
     })
@@ -76,7 +76,7 @@ describe('useDisputers', () => {
   })
 
   it('getDisputeStats returns stats for an address', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: [
         { status: 'pending', disputeType: 'fraud' },
@@ -95,7 +95,7 @@ describe('useDisputers', () => {
   })
 
   it('hasUserDisputed returns boolean', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockResolvedValue({
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockResolvedValue({
       success: true,
       data: [{ id: 'dispute-1' }],
     })
@@ -107,7 +107,9 @@ describe('useDisputers', () => {
   })
 
   it('sets error on API failure', async () => {
-    ;(globalThis.$fetch as ReturnType<typeof vi.fn>).mockRejectedValue(new Error('Network error'))
+    ;(globalThis.$fetch as unknown as ReturnType<typeof vi.fn>).mockRejectedValue(
+      new Error('Network error'),
+    )
 
     const { getDispute, error } = useDisputers()
 
