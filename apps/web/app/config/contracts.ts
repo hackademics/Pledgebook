@@ -122,6 +122,30 @@ export const PLEDGE_ESCROW_ABI: Abi = [
     inputs: [],
     outputs: [],
   },
+  {
+    type: 'function',
+    name: 'verifyAndRelease',
+    stateMutability: 'nonpayable',
+    inputs: [
+      { name: 'success', type: 'bool' },
+      { name: 'promptHash_', type: 'bytes32' },
+    ],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'claimCreator',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
+  {
+    type: 'function',
+    name: 'claimTreasury',
+    stateMutability: 'nonpayable',
+    inputs: [],
+    outputs: [],
+  },
   // Read functions
   {
     type: 'function',
@@ -186,6 +210,34 @@ export const PLEDGE_ESCROW_ABI: Abi = [
     inputs: [],
     outputs: [{ name: '', type: 'bool' }],
   },
+  {
+    type: 'function',
+    name: 'endDate',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
+  {
+    type: 'function',
+    name: 'promptHash',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'bytes32' }],
+  },
+  {
+    type: 'function',
+    name: 'creator',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'address' }],
+  },
+  {
+    type: 'function',
+    name: 'creatorClaimable',
+    stateMutability: 'view',
+    inputs: [],
+    outputs: [{ name: '', type: 'uint256' }],
+  },
   // Events
   {
     type: 'event',
@@ -213,6 +265,23 @@ export const PLEDGE_ESCROW_ABI: Abi = [
       { name: 'disputer', type: 'address', indexed: true },
       { name: 'amount', type: 'uint256', indexed: false },
       { name: 'reason', type: 'string', indexed: false },
+    ],
+  },
+  {
+    type: 'event',
+    name: 'Verified',
+    inputs: [
+      { name: 'id', type: 'uint256', indexed: true },
+      { name: 'success', type: 'bool', indexed: false },
+    ],
+  },
+  {
+    type: 'event',
+    name: 'FundsReleased',
+    inputs: [
+      { name: 'id', type: 'uint256', indexed: true },
+      { name: 'amount', type: 'uint256', indexed: false },
+      { name: 'to', type: 'address', indexed: false },
     ],
   },
 ] as const

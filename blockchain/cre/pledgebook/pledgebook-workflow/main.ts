@@ -87,6 +87,40 @@ type CREEvaluationOutput = {
   created_at?: string
 }
 
+type CREImageVerificationInput = {
+  request_id: string
+  campaign_id: string
+  prompt: string
+  prompt_hash: string
+  baseline_image_url: string
+  completion_image_url: string
+  verification_criteria: {
+    target_text: string
+    baseline_count: number
+    required_count: number
+  }
+  metadata?: CRERequestMetadata
+}
+
+type CREImageVerificationOutput = {
+  request_id: string
+  campaign_id: string
+  verdict: 'pass' | 'fail' | 'needs_review'
+  confidence: number
+  evaluation_summary: string
+  baseline_analysis: {
+    detected_count: number
+    confidence: number
+  }
+  completion_analysis: {
+    detected_count: number
+    confidence: number
+  }
+  consensus?: number
+  model?: string
+  created_at?: string
+}
+
 type Config = {
   http: {
     authorizedKeys: Array<{
@@ -98,13 +132,16 @@ type Config = {
     validation: string
     baseline: string
     evaluation: string
+    imageVerification?: string
   }
   endpoints: {
     modelEndpoint?: string
+    visionModelEndpoint?: string
     hashStorageUrl?: string
     validationCallbackUrl?: string
     baselineCallbackUrl?: string
     evaluationCallbackUrl?: string
+    imageVerificationCallbackUrl?: string
   }
   consensus: {
     passThreshold: number
@@ -119,6 +156,7 @@ type WorkflowEnvelope =
   | { workflow: 'validation'; data: CREValidationInput }
   | { workflow: 'baseline'; data: CREBaselineInput }
   | { workflow: 'evaluation'; data: CREEvaluationInput }
+  | { workflow: 'image-verification'; data: CREImageVerificationInput }
 
 const nowIso = () => new Date().toISOString()
 
@@ -377,10 +415,97 @@ export const runEvaluationWorkflow = async (
   return output
 }
 
+export const runImageVerificationWorkflow = async (
+  runtime: Runtime<Config>,
+  input: CREImageVerificationInput,
+): Promise<CREImageVerificationOutput> => {
+  const endpoint = runtime.config.endpoints.visionModelEndpoint
+  if (!endpoint) {
+    throw new Error('Vision model endpoint not configured')
+  }
+
+  // Call the vision model endpoint with image URLs
+  const visionRequest = {
+    baseline_image_url: input.baseline_image_url,
+    completion_image_url: input.completion_image_url,
+    verification_criteria: input.verification_criteria,
+    campaign_id: input.campaign_id,
+    request_id: input.request_id,
+  }
+
+  const http = new cre.capabilities.HTTPClient()
+  const visionScore = runtime.runInNodeMode(
+    (nodeRuntime) => {
+      const response = http
+        .sendRequest(nodeRuntime, {
+          url: endpoint,
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify(visionRequest),
+        })
+        .result()
+
+      if (!ok(response)) {
+        throw new Error(`Vision model request failed with status: ${response.statusCode}`)
+      }
+
+      const data = JSON.parse(new TextDecoder().decode(response.body ?? new Uint8Array())) as {
+        success: boolean
+        data: {
+          baseline_count: number
+          completion_count: number
+          meets_criteria: boolean
+          confidence: number
+          reasoning: string
+          score: number
+        }
+      }
+
+      return data.data
+    },
+    consensusMedianAggregation<{
+      baseline_count: number
+      completion_count: number
+      meets_criteria: boolean
+      confidence: number
+      reasoning: string
+      score: number
+    }>(),
+  )
+
+  const visionResult = visionScore().result()
+  const verdict = scoreToVerdict(visionResult.score, runtime.config)
+
+  const output: CREImageVerificationOutput = {
+    request_id: input.request_id,
+    campaign_id: input.campaign_id,
+    verdict,
+    confidence: visionResult.confidence,
+    evaluation_summary: visionResult.reasoning,
+    baseline_analysis: {
+      detected_count: visionResult.baseline_count,
+      confidence: visionResult.confidence,
+    },
+    completion_analysis: {
+      detected_count: visionResult.completion_count,
+      confidence: visionResult.confidence,
+    },
+    consensus: visionResult.score,
+    model: endpoint,
+    created_at: nowIso(),
+  }
+
+  requestCallback(runtime, runtime.config.endpoints.imageVerificationCallbackUrl, output)
+
+  return output
+}
+
 const onHttpTrigger = async (
   runtime: Runtime<Config>,
   payload: HTTPPayload,
-): Promise<CREValidationOutput | CREBaselineOutput | CREEvaluationOutput> => {
+): Promise<
+  CREValidationOutput | CREBaselineOutput | CREEvaluationOutput | CREImageVerificationOutput
+> => {
   const envelope = decodePayload(payload)
 
   switch (envelope.workflow) {
@@ -390,6 +515,8 @@ const onHttpTrigger = async (
       return runBaselineWorkflow(runtime, envelope.data)
     case 'evaluation':
       return runEvaluationWorkflow(runtime, envelope.data)
+    case 'image-verification':
+      return runImageVerificationWorkflow(runtime, envelope.data)
     default:
       throw new Error('Unsupported workflow type')
   }

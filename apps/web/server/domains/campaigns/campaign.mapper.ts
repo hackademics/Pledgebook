@@ -50,6 +50,8 @@ export function toCampaignResponse(row: Campaign): CampaignResponse {
     isVerified: Boolean(row.is_verified),
     isDisputed: Boolean(row.is_disputed),
     escrowAddress: row.escrow_address ?? null,
+    baselineEvidenceId: row.baseline_evidence_id ?? null,
+    completionEvidenceId: row.completion_evidence_id ?? null,
     startDate: row.start_date ?? null,
     endDate: row.end_date,
     pledgeCount: row.pledge_count,

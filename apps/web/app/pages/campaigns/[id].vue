@@ -142,7 +142,14 @@
             </div>
           </section>
 
-          <EvidenceUploadCard :campaign-id="resolvedCampaignId" />
+          <VerificationCard
+            :campaign-id="resolvedCampaignId"
+            :creator-address="campaign.creatorAddress"
+            :baseline-evidence-id="campaign.baselineEvidenceId"
+            :completion-evidence-id="campaign.completionEvidenceId"
+            @verified="handleVerificationComplete"
+            @evidence-updated="refreshCampaign"
+          />
 
           <section class="detail-card">
             <h2>Wallet Actions</h2>
@@ -373,7 +380,7 @@ import type { PledgeSummary } from '~/types/pledge'
 import type { VoucherSummary } from '~/types/voucher'
 import type { DisputerSummary } from '~/types/disputer'
 import TurnstileWidget from '../../components/common/TurnstileWidget.vue'
-import EvidenceUploadCard from '../../components/evidence/EvidenceUploadCard.vue'
+import VerificationCard from '../../components/evidence/VerificationCard.vue'
 import VouchModal from '../../components/VouchModal.vue'
 import DisputeModal from '../../components/DisputeModal.vue'
 
@@ -456,6 +463,25 @@ function handleTurnstileError(message: string): void {
     icon: 'i-heroicons-exclamation-circle',
     color: 'error',
   })
+}
+
+function handleVerificationComplete(result: {
+  verdict: string
+  oracle?: { transactionHash?: string }
+}): void {
+  // Refresh campaign data to get updated status
+  refreshCampaign()
+
+  // Show success notification with transaction link if available
+  if (result.oracle?.transactionHash) {
+    toast.add({
+      title: result.verdict === 'pass' ? 'Campaign Verified!' : 'Verification Complete',
+      description: `On-chain transaction: ${result.oracle.transactionHash.slice(0, 10)}...`,
+      icon:
+        result.verdict === 'pass' ? 'i-heroicons-check-circle' : 'i-heroicons-information-circle',
+      color: result.verdict === 'pass' ? 'success' : 'neutral',
+    })
+  }
 }
 
 function ensureWalletAndToken(): boolean {
