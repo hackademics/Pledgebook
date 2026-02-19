@@ -7,6 +7,7 @@
         @click.self="handleClose"
       >
         <div
+          ref="modalRef"
           class="dispute-modal"
           role="dialog"
           aria-modal="true"
@@ -322,11 +323,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, reactive, ref, watch, toRef } from 'vue'
 import type { DisputerFormState, DisputeType, EvidenceItem } from '../types/disputer'
 import { parseDisputerAmountToWei, getDisputeTypeConfig } from '../types/disputer'
 import { useDisputers } from '../composables/useDisputers'
 import { ERC20_ABI, PLEDGE_ESCROW_ABI, getUsdcAddress } from '~/config/contracts'
+import { useFocusTrap } from '~/composables/useFocusTrap'
 import type { Address } from 'viem'
 
 interface Props {
@@ -354,6 +356,11 @@ const {
   getWalletClient,
 } = useWallet()
 const { createDispute } = useDisputers()
+
+// Modal ref and focus trap for accessibility
+const modalRef = ref<HTMLElement | null>(null)
+const visibleRef = toRef(props, 'visible')
+useFocusTrap(modalRef, visibleRef)
 
 // Form state
 const form = reactive<DisputerFormState>({

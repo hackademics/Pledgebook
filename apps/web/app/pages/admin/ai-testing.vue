@@ -642,18 +642,18 @@
               <h4 class="helper-card__title">Documentation</h4>
               <div class="ai-testing__docs-links">
                 <NuxtLink
-                  to="/docs/guides/AI-GUIDE"
+                  to="/docs"
                   class="ai-testing__doc-link"
                 >
                   <Icon name="heroicons:book-open" />
                   AI System Guide
                 </NuxtLink>
                 <NuxtLink
-                  to="/docs/guides/CRE-GUIDE"
+                  to="/docs/api"
                   class="ai-testing__doc-link"
                 >
                   <Icon name="heroicons:cpu-chip" />
-                  CRE Integration
+                  API Reference
                 </NuxtLink>
               </div>
             </div>

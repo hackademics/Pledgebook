@@ -36,9 +36,13 @@
                 type="text"
                 class="input-search"
                 :placeholder="searchPlaceholder"
+                aria-autocomplete="list"
+                :aria-expanded="showSearchDropdown"
+                aria-controls="search-listbox"
                 @focus="handleSearchFocus"
                 @blur="handleSearchBlur"
                 @input="handleSearchInput"
+                @keydown="handleSearchKeydown"
               />
               <kbd
                 v-if="!searchQuery && !searchFocused"
@@ -64,7 +68,10 @@
             <Transition name="fade">
               <div
                 v-if="showSearchDropdown"
+                id="search-listbox"
                 class="search-dropdown"
+                role="listbox"
+                aria-label="Search results"
               >
                 <div
                   v-if="searchLoading"
@@ -75,10 +82,16 @@
                 </div>
                 <template v-else-if="searchResults.length > 0">
                   <NuxtLink
-                    v-for="result in searchResults"
+                    v-for="(result, index) in searchResults"
                     :key="result.id"
                     :to="result.url"
                     class="search-result"
+                    role="option"
+                    :aria-selected="searchSelectedIndex === index"
+                    :class="{ 'search-result--selected': searchSelectedIndex === index }"
+                    :tabindex="searchSelectedIndex === index ? 0 : -1"
+                    @mouseenter="searchSelectedIndex = index"
+                    @click="handleSearchResultClick"
                   >
                     <div class="search-result-content">
                       <span class="search-result-title">{{ result.title }}</span>
@@ -150,6 +163,7 @@
               class="action-btn mobile-menu-btn"
               :aria-label="mobileMenuOpen ? 'Close menu' : 'Open menu'"
               :aria-expanded="mobileMenuOpen"
+              aria-controls="mobile-panel"
               @click="toggleMobileMenu"
             >
               <Icon
@@ -238,7 +252,12 @@
     <Transition name="slide-right">
       <div
         v-if="mobileMenuOpen"
+        id="mobile-panel"
+        ref="mobilePanelRef"
         class="mobile-panel"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation menu"
       >
         <!-- Panel Header with Logo -->
         <div class="mobile-panel-header">
@@ -283,9 +302,9 @@
             <span>Home</span>
           </NuxtLink>
           <NuxtLink
-            to="/about"
+            to="/how-it-works"
             class="mobile-nav-item"
-            :class="{ active: route.path === '/about' }"
+            :class="{ active: route.path === '/how-it-works' }"
             @click="closeMobileMenu"
           >
             <Icon
@@ -307,9 +326,9 @@
             <span>Create Campaign</span>
           </NuxtLink>
           <NuxtLink
-            to="/my-campaigns"
+            to="/dashboard"
             class="mobile-nav-item"
-            :class="{ active: route.path === '/my-campaigns' }"
+            :class="{ active: route.path === '/dashboard' }"
             @click="closeMobileMenu"
           >
             <Icon
@@ -376,7 +395,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
 import { useColorMode } from '@vueuse/core'
 import { useCategories } from '~/composables/useCategories'
@@ -441,22 +460,72 @@ const {
   clearSearch,
 } = useSearch()
 const searchFocused = ref(false)
+const searchSelectedIndex = ref(-1)
 const showSearchDropdown = computed(() => searchFocused.value && searchQuery.value.length >= 2)
+
+// Reset selection when results change
+watch(searchResults, () => {
+  searchSelectedIndex.value = searchResults.value.length > 0 ? 0 : -1
+})
 
 function handleSearchFocus() {
   searchFocused.value = true
+  searchSelectedIndex.value = searchResults.value.length > 0 ? 0 : -1
 }
 
 function handleSearchBlur() {
   // Delay to allow clicking on results
   setTimeout(() => {
     searchFocused.value = false
+    searchSelectedIndex.value = -1
   }, 200)
 }
 
 function handleSearchInput(event: Event) {
   const target = event.target as HTMLInputElement
   searchQuery.value = target.value
+}
+
+function handleSearchResultClick() {
+  searchFocused.value = false
+  searchSelectedIndex.value = -1
+  clearSearch()
+}
+
+function handleSearchKeydown(event: KeyboardEvent) {
+  if (!showSearchDropdown.value || searchResults.value.length === 0) return
+
+  switch (event.key) {
+    case 'ArrowDown':
+      event.preventDefault()
+      searchSelectedIndex.value = (searchSelectedIndex.value + 1) % searchResults.value.length
+      break
+    case 'ArrowUp':
+      event.preventDefault()
+      searchSelectedIndex.value =
+        searchSelectedIndex.value <= 0
+          ? searchResults.value.length - 1
+          : searchSelectedIndex.value - 1
+      break
+    case 'Enter':
+      event.preventDefault()
+      if (
+        searchSelectedIndex.value >= 0 &&
+        searchSelectedIndex.value < searchResults.value.length
+      ) {
+        const result = searchResults.value[searchSelectedIndex.value]
+        if (result) {
+          navigateTo(result.url)
+          handleSearchResultClick()
+        }
+      }
+      break
+    case 'Escape':
+      event.preventDefault()
+      searchFocused.value = false
+      searchSelectedIndex.value = -1
+      break
+  }
 }
 
 // Active filter from query
@@ -466,19 +535,58 @@ const activeFilter = computed(() => {
 
 // Mobile menu
 const mobileMenuOpen = ref(false)
+const mobilePanelRef = ref<HTMLElement | null>(null)
+const previouslyFocusedElement = ref<HTMLElement | null>(null)
 
 function toggleMobileMenu() {
   mobileMenuOpen.value = !mobileMenuOpen.value
   if (mobileMenuOpen.value) {
+    previouslyFocusedElement.value = document.activeElement as HTMLElement | null
     document.body.style.overflow = 'hidden'
+    // Focus first focusable element after transition
+    nextTick(() => {
+      const panel = mobilePanelRef.value
+      if (panel) {
+        const firstFocusable = panel.querySelector<HTMLElement>(
+          'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        )
+        firstFocusable?.focus()
+      }
+    })
   } else {
     document.body.style.overflow = ''
+    previouslyFocusedElement.value?.focus()
+    previouslyFocusedElement.value = null
   }
 }
 
 function closeMobileMenu() {
   mobileMenuOpen.value = false
   document.body.style.overflow = ''
+  previouslyFocusedElement.value?.focus()
+  previouslyFocusedElement.value = null
+}
+
+// Focus trap for mobile menu
+function handleMobileMenuKeydown(event: KeyboardEvent) {
+  if (!mobileMenuOpen.value || !mobilePanelRef.value) return
+
+  if (event.key === 'Tab') {
+    const panel = mobilePanelRef.value
+    const focusableElements = panel.querySelectorAll<HTMLElement>(
+      'a, button, input, select, textarea, [tabindex]:not([tabindex="-1"])',
+    )
+    const firstElement = focusableElements[0]
+    const lastElement = focusableElements[focusableElements.length - 1]
+
+    if (event.shiftKey && document.activeElement === firstElement) {
+      event.preventDefault()
+      lastElement?.focus()
+    } else if (!event.shiftKey && document.activeElement === lastElement) {
+      event.preventDefault()
+      firstElement?.focus()
+    }
+  }
 }
 
 // Scroll detection for categories
@@ -505,6 +613,9 @@ function handleKeydown(event: KeyboardEvent) {
   if (event.key === 'Escape' && mobileMenuOpen.value) {
     closeMobileMenu()
   }
+
+  // Handle focus trap for mobile menu
+  handleMobileMenuKeydown(event)
 }
 
 // Lifecycle
@@ -742,8 +853,14 @@ onUnmounted(() => {
   transition: background-color 0.1s ease;
 }
 
-.search-result:hover {
+.search-result:hover,
+.search-result--selected {
   background-color: var(--surface-hover);
+}
+
+.search-result--selected {
+  outline: 2px solid var(--interactive-primary);
+  outline-offset: -2px;
 }
 
 .search-result-content {

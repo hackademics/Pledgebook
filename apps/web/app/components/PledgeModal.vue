@@ -7,6 +7,7 @@
         @click.self="handleClose"
       >
         <div
+          ref="modalRef"
           class="pledge-modal"
           role="dialog"
           aria-modal="true"
@@ -226,11 +227,12 @@
 </template>
 
 <script setup lang="ts">
-import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch } from 'vue'
+import { computed, nextTick, onMounted, onUnmounted, reactive, ref, watch, toRef } from 'vue'
 import { useRouter } from 'vue-router'
 import type { PledgeFormState } from '../types/pledge'
 import { parseAmountToWei } from '../types/pledge'
 import { ERC20_ABI, PLEDGE_ESCROW_ABI, getUsdcAddress } from '~/config/contracts'
+import { useFocusTrap } from '~/composables/useFocusTrap'
 import type { Address } from 'viem'
 
 interface Props {
@@ -250,7 +252,7 @@ const emit = defineEmits<{
 
 const router = useRouter()
 const amountInput = ref<HTMLInputElement | null>(null)
-const lastActiveElement = ref<HTMLElement | null>(null)
+const modalRef = ref<HTMLElement | null>(null)
 const {
   isConnected: isWalletConnected,
   connect,
@@ -261,6 +263,10 @@ const {
   getWalletClient,
 } = useWallet()
 const { createPledge } = usePledges()
+
+// Focus trap for accessibility
+const visibleRef = toRef(props, 'visible')
+useFocusTrap(modalRef, visibleRef)
 
 // Form state
 const form = reactive<PledgeFormState>({
@@ -305,13 +311,7 @@ watch(
   () => props.visible,
   (isVisible: boolean) => {
     if (isVisible) {
-      lastActiveElement.value = document.activeElement as HTMLElement | null
       nextTick(() => amountInput.value?.focus())
-      return
-    }
-    if (lastActiveElement.value) {
-      lastActiveElement.value.focus()
-      lastActiveElement.value = null
     }
   },
 )

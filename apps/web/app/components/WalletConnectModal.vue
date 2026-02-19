@@ -10,6 +10,7 @@
           <Transition name="scale">
             <div
               v-if="isOpen"
+              ref="modalRef"
               class="wallet-modal"
               role="dialog"
               aria-modal="true"
@@ -156,7 +157,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, watch, toRef } from 'vue'
+import { useFocusTrap } from '~/composables/useFocusTrap'
 
 interface Props {
   isOpen: boolean
@@ -177,6 +179,11 @@ const emit = defineEmits<{
 
 const termsAccepted = ref(false)
 const connectingProvider = ref<string>('')
+const modalRef = ref<HTMLElement | null>(null)
+
+// Focus trap for accessibility
+const isOpenRef = toRef(props, 'isOpen')
+useFocusTrap(modalRef, isOpenRef)
 
 // Reset terms checkbox when modal closes
 watch(
