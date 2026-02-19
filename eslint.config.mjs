@@ -4,11 +4,7 @@ import { createNuxtConfig } from '@pledgebook/eslint-config/nuxt'
 // Formatting is handled by Prettier - no need for @stylistic rules here
 export default createNuxtConfig()
   .append({
-    ignores: [
-      'blockchain/**/tmp.js',
-      'packages/**/tmp.js',
-      '**/pledgebook-workflow/tmp.js',
-    ],
+    ignores: ['blockchain/**/tmp.js', 'packages/**/tmp.js', '**/pledgebook-workflow/tmp.js'],
   })
   .append({
     rules: {
