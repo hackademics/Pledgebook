@@ -40,7 +40,7 @@
   },
   "lint-staged": {
     "*.{ts,tsx,vue,js,jsx}": [
-      "eslint --fix",
+      "eslint --fix --no-warn-ignored --ignore-pattern \"**/tmp.js\"",
       "prettier --write"
     ],
     "*.{json,md,css,scss}": [
