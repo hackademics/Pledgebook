@@ -27,7 +27,7 @@
     "@openzeppelin/contracts": "^5.0.2",
     "@types/chai": "^4.3.10",
     "@types/node": "^22.15.21",
-    "@typescript-eslint/parser": "^8.32.0",
+    "@typescript-eslint/parser": "^8.56.0",
     "chai": "^4.3.10",
     "dotenv": "^16.4.5",
     "eslint": "^9.11.1",
