@@ -295,7 +295,10 @@ interface Props {
 
 interface Emits {
   (e: 'close'): void
-  (e: 'upload', data: { ipfsUrl: string; cid: string; gatewayUrl?: string }): void
+  (
+    e: 'upload',
+    data: { ipfsUrl: string; cid: string; gatewayUrl?: string; evidenceId?: string },
+  ): void
 }
 
 const props = defineProps<Props>()
@@ -393,12 +396,15 @@ function handleReset(): void {
 
 function handleConfirm(): void {
   if (upload.state.value.ipfsUrl && upload.state.value.ipfsCid) {
-    const payload: { ipfsUrl: string; cid: string; gatewayUrl?: string } = {
+    const payload: { ipfsUrl: string; cid: string; gatewayUrl?: string; evidenceId?: string } = {
       ipfsUrl: upload.state.value.ipfsUrl,
       cid: upload.state.value.ipfsCid,
     }
     if (upload.state.value.gatewayUrl) {
       payload.gatewayUrl = upload.state.value.gatewayUrl
+    }
+    if (upload.state.value.evidenceId) {
+      payload.evidenceId = upload.state.value.evidenceId
     }
     emit('upload', payload)
   }

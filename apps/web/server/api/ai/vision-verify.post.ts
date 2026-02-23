@@ -25,8 +25,9 @@ const visionVerifyRequestSchema = z.object({
     baseline_count: z.number().int().min(0),
     required_count: z.number().int().min(1),
   }),
-  campaign_id: z.string().uuid(),
-  request_id: z.string().uuid(),
+  campaign_id: z.string().uuid().optional(),
+  request_id: z.string().uuid().optional(),
+  prompt: z.string().optional(),
 })
 
 /**
@@ -39,6 +40,51 @@ export type VisionVerifyResponse = {
   confidence: number
   reasoning: string
   score: number
+}
+
+/**
+ * Normalize admin and CRE request payloads into a single shape
+ */
+function normalizeVisionInput(input: Record<string, unknown>): {
+  baseline_image_url: string
+  completion_image_url: string
+  verification_criteria: {
+    target_text: string
+    baseline_count: number
+    required_count: number
+  }
+  campaign_id?: string
+  request_id?: string
+  prompt?: string
+} {
+  if ('baselineImageUrl' in input || 'completionImageUrl' in input || 'criteria' in input) {
+    const criteria = (input.criteria || {}) as Record<string, unknown>
+    return {
+      baseline_image_url: String(input.baselineImageUrl || ''),
+      completion_image_url: String(input.completionImageUrl || ''),
+      verification_criteria: {
+        target_text: String(criteria.targetText || ''),
+        baseline_count: Number(criteria.baselineCount ?? 0),
+        required_count: Number(criteria.requiredCount ?? 0),
+      },
+      campaign_id: input.campaignId ? String(input.campaignId) : undefined,
+      request_id: input.requestId ? String(input.requestId) : undefined,
+      prompt: input.prompt ? String(input.prompt) : undefined,
+    }
+  }
+
+  return input as {
+    baseline_image_url: string
+    completion_image_url: string
+    verification_criteria: {
+      target_text: string
+      baseline_count: number
+      required_count: number
+    }
+    campaign_id?: string
+    request_id?: string
+    prompt?: string
+  }
 }
 
 /**
@@ -214,7 +260,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // Parse and validate request body
-    const input = visionVerifyRequestSchema.parse(JSON.parse(rawBody))
+    const parsedBody = JSON.parse(rawBody)
+    const input = visionVerifyRequestSchema.parse(normalizeVisionInput(parsedBody))
 
     // Get OpenAI API key from runtime config
     const config = useRuntimeConfig(event)
@@ -225,7 +272,8 @@ export default defineEventHandler(async (event) => {
     }
 
     // Build prompt and call Vision API
-    const prompt = buildVisionPrompt(input.verification_criteria)
+    const promptBase = buildVisionPrompt(input.verification_criteria)
+    const prompt = input.prompt ? `CAMPAIGN PROMPT:\n${input.prompt}\n\n${promptBase}` : promptBase
     const visionResult = await callVisionAPI(
       openaiApiKey,
       prompt,

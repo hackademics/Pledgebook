@@ -34,6 +34,7 @@ export interface ImageUploadState {
   ipfsUrl: string | null
   ipfsCid: string | null
   gatewayUrl: string | null
+  evidenceId: string | null
 }
 
 /**
@@ -52,6 +53,7 @@ export interface UploadResult {
   ipfsUrl?: string
   ipfsCid?: string
   gatewayUrl?: string
+  evidenceId?: string
   error?: string
 }
 
@@ -98,6 +100,7 @@ export function useImageUpload(config: Partial<ImageUploadConfig> = {}) {
     ipfsUrl: null,
     ipfsCid: null,
     gatewayUrl: null,
+    evidenceId: null,
   })
 
   // Computed properties
@@ -310,6 +313,7 @@ export function useImageUpload(config: Partial<ImageUploadConfig> = {}) {
                   ipfsUrl: response.data.ipfsUrl,
                   ipfsCid: response.data.cid,
                   gatewayUrl: response.data.gatewayUrl,
+                  evidenceId: response.data.evidenceId,
                 })
               } else {
                 resolve({
@@ -346,6 +350,7 @@ export function useImageUpload(config: Partial<ImageUploadConfig> = {}) {
         state.value.ipfsUrl = result.ipfsUrl || null
         state.value.ipfsCid = result.ipfsCid || null
         state.value.gatewayUrl = result.gatewayUrl || null
+        state.value.evidenceId = result.evidenceId || null
         state.value.uploadProgress = 100
       } else {
         state.value.error = result.error || 'Upload failed'
@@ -377,6 +382,7 @@ export function useImageUpload(config: Partial<ImageUploadConfig> = {}) {
       ipfsUrl: null,
       ipfsCid: null,
       gatewayUrl: null,
+      evidenceId: null,
     }
   }
 

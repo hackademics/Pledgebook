@@ -303,8 +303,9 @@ export default defineEventHandler(async (event) => {
     const ipfsUrl = `ipfs://${cid}`
     const gatewayUrl = `${normalizedGatewayBase}${cid}`
 
+    let evidenceId: string | null = null
     if (DB) {
-      const evidenceId = crypto.randomUUID()
+      evidenceId = crypto.randomUUID()
       await DB.prepare(
         `INSERT INTO evidence (
           evidence_id,
@@ -336,6 +337,7 @@ export default defineEventHandler(async (event) => {
 
     // Return success response
     return sendSuccess(event, {
+      evidenceId: evidenceId || undefined,
       cid,
       ipfsUrl,
       gatewayUrl,
