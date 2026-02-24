@@ -1,5 +1,5 @@
 {
-  "name": "typescript-simple-template",
+  "name": "pledgebook-workflow",
   "version": "1.0.0",
   "main": "dist/main.js",
   "private": true,
@@ -9,11 +9,12 @@
   },
   "license": "UNLICENSED",
   "dependencies": {
-    "@chainlink/cre-sdk": "^1.0.3"
+    "@chainlink/cre-sdk": "^1.0.3",
+    "@noble/hashes": "^1.7.2",
+    "zod": "^4.1.5"
   },
   "devDependencies": {
     "@types/bun": "1.2.21",
-    "@types/minimatch": "^5.1.2",
-    "zod": "^4.1.5"
+    "@types/minimatch": "^5.1.2"
   }
 }
