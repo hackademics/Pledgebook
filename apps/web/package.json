@@ -63,7 +63,7 @@
     "@iconify-json/simple-icons": "^1.2.68",
     "@nuxt/devtools": "^2.4.1",
     "@nuxt/eslint": "^1.4.2",
-    "@nuxt/test-utils": "^3.17.2",
+    "@nuxt/test-utils": "^4.0.0",
     "@types/node": "^22.15.21",
     "@vue/test-utils": "^2.4.6",
     "eslint": "^9.28.0",
